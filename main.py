@@ -16,7 +16,6 @@ import decimal
 #
 
 load_dotenv ()
-decimal.getcontext ().prec = 2
 
 #Connect to database
 try:
@@ -55,9 +54,6 @@ def getBalance (userID):
 def setBalance (userID, balance):
     cur.execute ("UPDATE balances SET balance=? WHERE userID=?", (balance, userID,))
 
-def changeBalance (userID, amount):
-    setBalance (userID, decimal.Decimal (getBalance (userID)) + amount)
-
 def userExists (userID):
     cur.execute ("SELECT userID FROM balances WHERE userID=?", (userID,))
     for userID in cur:
@@ -68,6 +64,12 @@ def userExists (userID):
 
 def addUser (userID):
     cur.execute ("INSERT INTO balances (userID, balance) VALUES (?, ?)", (userID, 0,))
+
+def transferMoney (senderID, recipientID, amount, logging=True, comment=""):
+    setBalance (senderID, getBalance (senderID) - amount)
+    setBalance (recipientID, getBalance (recipientID) + amount)
+    if logging:
+        cur.execute ("INSERT INTO transactionLog (senderID, recipientID, amount, comment) VALUES (?, ?, ?, ?)", (senderID, recipientID, amount, comment,))
 
 #
 #   Discord
@@ -99,7 +101,7 @@ async def pay (interaction: discord.Interaction, recipient: discord.Member, amou
         addUser (interaction.user.id)
 
     #Round amount to send to two decimal places and verify it is valid
-    amount = decimal.Decimal (amount)
+    amount = decimal.Decimal (amount).quantize (decimal.Decimal ("0.01"))
     if amount < 0:
         await interaction.response.send_message (f"You cannot send a negative amount of money", ephemeral=True)
     else:
@@ -111,8 +113,7 @@ async def pay (interaction: discord.Interaction, recipient: discord.Member, amou
         funds = getBalance (interaction.user.id)
         if amount <= funds:
             #Transfer money
-            changeBalance (interaction.user.id, -amount)
-            changeBalance (recipient.id, amount)
+            transferMoney (interaction.user.id, recipient.id, amount, comment=comment)
             await interaction.response.send_message (f"Sent {amount:.2f} from {interaction.user.mention} to {recipient.mention} with comment:\n{comment}")
         else:
             await interaction.response.send_message (f"Insufficient balance, you currently have {funds:.2f} money left.", ephemeral=True)
