@@ -2,20 +2,25 @@
 
 # Module Imports
 import mariadb
-import sys
 import discord
+from discord import app_commands
+from discord.ext import commands
+from dotenv import load_dotenv
+import os
 
 #--------------------------------------------------------------
 #------------------------------Setup---------------------------
 #--------------------------------------------------------------
 
+load_dotenv ()
+
 #Connect to database
 try:
     conn = mariadb.connect(
-        user="moneybot",
-        password="gositi07",
+        user="simon",
+        password=os.getenv("DB_PASS"),
         host="localhost",
-        database="money"
+        database="moneybot"
 
     )
 except mariadb.Error as e:
@@ -29,7 +34,7 @@ cur = conn.cursor()
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
-token = "OTExMjAyNTEwOTczMzA4OTI5.YZd9dw.8dubcA2ETydjOVKbv0C_oUmUH4w"
+token = os.getenv("TOKEN")
 
 #--------------------------------------------------------------
 #------------------------------MariaDB-------------------------
@@ -71,7 +76,7 @@ def userExists (userID):
     conn.commit ()
 
 def addUser (userID):
-    cur.execute ("INSERT INTO balances (userID, balance) VALUES (?, ?)", (userID, 50,))
+    cur.execute ("INSERT INTO balances (userID, balance) VALUES (?, ?)", (userID, 0,))
 
     conn.commit ()
 
