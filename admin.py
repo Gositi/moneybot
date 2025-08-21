@@ -15,17 +15,17 @@ load_dotenv ()
 
 #Connect to database
 db = database.Database (
-    user="simon",
-    passwd=os.getenv("DB_PASS"),
-    host="localhost",
-    database="moneybot"
+    user = os.getenv ("DB_USER"),
+    passwd = os.getenv ("DB_PASS"),
+    host = "localhost",
+    database = "moneybot"
 )
 
 #Setup Discord bot
 intents = discord.Intents.default ()
 client = discord.Client (intents=intents)
 tree = app_commands.CommandTree (client)
-guild = discord.Object (id = int (os.getenv ("GUILD")))
+guild = discord.Object (id = int (os.getenv ("ADMIN_GUILD")))
 
 #Get any users balance
 @tree.command (name = "getbal", description = "ADMIN: Get any users balance", guild = guild)

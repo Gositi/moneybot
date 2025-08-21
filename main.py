@@ -15,10 +15,10 @@ load_dotenv ()
 
 #Connect to database
 db = database.Database (
-    user="simon",
-    passwd=os.getenv("DB_PASS"),
-    host="localhost",
-    database="moneybot"
+    user = os.getenv ("DB_USER"),
+    passwd = os.getenv ("DB_PASS"),
+    host = "localhost",
+    database = "moneybot"
 )
 
 #Setup Discord bot
