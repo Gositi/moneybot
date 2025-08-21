@@ -1,37 +1,25 @@
 #!/usr/bin/env python3
 
 #MariaDB
-import mariadb
+import database
 #Discord
 import discord
 from discord import app_commands
-#Dotenc
+#Dotenv
 from dotenv import load_dotenv
 import os
 #Decimal numbers for currencies
 import decimal
 
-#
-#   Setup
-#
-
 load_dotenv ()
 
 #Connect to database
-try:
-    conn = mariadb.connect(
-        user="simon",
-        password=os.getenv("DB_PASS"),
-        host="localhost",
-        database="moneybot"
-
-    )
-except mariadb.Error as e:
-    print(f"Error connecting to MariaDB Platform: {e}")
-    sys.exit(1)
-
-#Set/get database cursor
-cur = conn.cursor()
+db = database.Database (
+    user="simon",
+    passwd=os.getenv("DB_PASS"),
+    host="localhost",
+    database="moneybot"
+)
 
 #Setup Discord bot
 intents = discord.Intents.default ()
@@ -39,54 +27,19 @@ client = discord.Client (intents=intents)
 tree = app_commands.CommandTree (client)
 guild = discord.Object (id = int (os.getenv ("GUILD_ID")))
 
-#
-#   MariaDB
-#
-
-def commit ():
-    conn.commit ()
-
-def getBalance (userID):
-    cur.execute ("SELECT balance FROM balances WHERE userID=?", (userID,))
-    for balance in cur:
-        return decimal.Decimal (balance [0])
-
-def setBalance (userID, balance):
-    cur.execute ("UPDATE balances SET balance=? WHERE userID=?", (balance, userID,))
-
-def userExists (userID):
-    cur.execute ("SELECT userID FROM balances WHERE userID=?", (userID,))
-    for userID in cur:
-        if userID != None:
-            return True
-        else:
-            return False
-
-def addUser (userID):
-    cur.execute ("INSERT INTO balances (userID, balance) VALUES (?, ?)", (userID, 0,))
-
-def transferMoney (senderID, recipientID, amount, logging=True, comment=""):
-    setBalance (senderID, getBalance (senderID) - amount)
-    setBalance (recipientID, getBalance (recipientID) + amount)
-    if logging:
-        cur.execute ("INSERT INTO transactionLog (senderID, recipientID, amount, comment) VALUES (?, ?, ?, ?)", (senderID, recipientID, amount, comment,))
-
-#
-#   Discord
-#
-
+#Get your own balance
 @tree.command (name = "bal", description = "Get your balance", guild = guild)
 async def bal (interaction: discord.Interaction):
-    commit ()
+    db.commit ()
 
     #Make sure user exists
-    if not userExists (interaction.user.id):
-        addUser (interaction.user.id)
+    db.ensureUserExists (interaction.user.id)
     #Respond with balance
-    await interaction.response.send_message (f"You have {getBalance (interaction.user.id):.2f} money.", ephemeral=True)
+    await interaction.response.send_message (f"You have {db.getBalance (interaction.user.id):.2f} money.", ephemeral=True)
 
-    commit ()
+    db.commit ()
 
+#Pay/transfer money to someone else
 @tree.command (name = "pay", description = "Transfer money", guild = guild)
 @app_commands.describe (
     recipient = "Recipient of transfer",
@@ -94,11 +47,10 @@ async def bal (interaction: discord.Interaction):
     comment = "Optional transaction comment/message"
 )
 async def pay (interaction: discord.Interaction, recipient: discord.Member, amount: float, comment: str):
-    commit ()
+    db.commit ()
 
     #Make sure sender exists
-    if not userExists (interaction.user.id):
-        addUser (interaction.user.id)
+    db.ensureUserExists (interaction.user.id)
 
     #Round amount to send to two decimal places and verify it is valid
     amount = decimal.Decimal (amount).quantize (decimal.Decimal ("0.01"))
@@ -106,19 +58,18 @@ async def pay (interaction: discord.Interaction, recipient: discord.Member, amou
         await interaction.response.send_message (f"You cannot send a negative amount of money", ephemeral=True)
     else:
         #Make sure recipient exists
-        if not userExists (recipient.id):
-            addUser (recipient.id)
+        db.ensureUserExists (recipient.id)
 
         #Check that the sender has enough money
-        funds = getBalance (interaction.user.id)
+        funds = db.getBalance (interaction.user.id)
         if amount <= funds:
             #Transfer money
-            transferMoney (interaction.user.id, recipient.id, amount, comment=comment)
+            db.transferMoney (interaction.user.id, recipient.id, amount, comment=comment)
             await interaction.response.send_message (f"Sent {amount:.2f} from {interaction.user.mention} to {recipient.mention} with comment:\n{comment}")
         else:
             await interaction.response.send_message (f"Insufficient balance, you currently have {funds:.2f} money left.", ephemeral=True)
 
-    commit ()
+    db.commit ()
 
 @client.event
 async def on_ready():
