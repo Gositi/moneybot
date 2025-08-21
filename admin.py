@@ -42,6 +42,20 @@ async def getbal (interaction: discord.Interaction, user: discord.User):
 
     db.commit ()
 
+#Get all users balance
+@tree.command (name = "allbal", description = "ADMIN: List all users balances", guild = guild)
+async def allbal (interaction: discord.Interaction):
+    db.commit ()
+
+    #Get and display balances
+    balances = db.getBalances ()
+    s = "List of balances:"
+    for userID, balance in balances.items ():
+        s += f"\n<@{userID}>: {balance:.2f}"
+    await interaction.response.send_message (s)
+
+    db.commit ()
+
 #Change the balance of a user
 @tree.command (name = "chgbal", description = "ADMIN: Change any users balance", guild = guild)
 @app_commands.describe (

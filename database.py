@@ -31,6 +31,11 @@ class Database:
         for balance in self.cur:
             return decimal.Decimal (balance [0])
 
+    #Get balance of every user
+    def getBalances (self):
+        self.cur.execute ("SELECT userID, balance FROM balances")
+        return {userID: balance for userID, balance in self.cur}
+
     #Set balance of user
     def setBalance (self, user, balance):
         self.cur.execute ("UPDATE balances SET balance=? WHERE userID=?", (balance, user,))
