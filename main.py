@@ -25,7 +25,7 @@ db = database.Database (
 intents = discord.Intents.default ()
 client = discord.Client (intents=intents)
 tree = app_commands.CommandTree (client)
-guild = discord.Object (id = int (os.getenv ("GUILD_ID")))
+guild = discord.Object (id = int (os.getenv ("GUILD")))
 
 #Get your own balance
 @tree.command (name = "bal", description = "Get your balance", guild = guild)
