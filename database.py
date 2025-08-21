@@ -44,7 +44,11 @@ class Database:
         self.changeBalance (sender, -amount)
         self.changeBalance (recipient, amount)
         if logging:
-            self.cur.execute ("INSERT INTO transactionLog (senderID, recipientID, amount, comment) VALUES (?, ?, ?, ?)", (sender, recipient, amount, comment,))
+            self.logTransaction (sender, recipient, amount, comment=comment)
+
+    #Log a transaction
+    def logTransaction (self, sender, recipient, amount, comment=""):
+        self.cur.execute ("INSERT INTO transactionLog (senderID, recipientID, amount, comment) VALUES (?, ?, ?, ?)", (sender, recipient, amount, comment,))
 
     #Make sure user exists
     def ensureUserExists (self, user):

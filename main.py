@@ -46,7 +46,7 @@ async def bal (interaction: discord.Interaction):
     amount = "Amount of money to transfer, up to two decimal places",
     comment = "Optional transaction comment/message"
 )
-async def pay (interaction: discord.Interaction, recipient: discord.Member, amount: float, comment: str):
+async def pay (interaction: discord.Interaction, recipient: discord.User, amount: float, comment: str = ""):
     db.commit ()
 
     #Make sure sender exists
