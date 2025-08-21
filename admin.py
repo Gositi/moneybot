@@ -57,7 +57,7 @@ async def chgbal (interaction: discord.Interaction, user: discord.User, amount: 
     #Round amount to send to two decimal places and verify it is valid
     amount = decimal.Decimal (amount).quantize (decimal.Decimal ("0.01"))
     #Perform transaction
-    db.setBalance (user.id, amount)
+    db.changeBalance (user.id, amount)
     db.logTransaction (None, user.id, amount, comment=comment)
     await interaction.response.send_message (f"Changed balance of {user.mention} by {amount:.2f} with comment:\n{comment}")
 
