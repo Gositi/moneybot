@@ -13,7 +13,8 @@ class Database:
                 user = user,
                 host = host,
                 passwd = passwd,
-                database = database
+                database = database,
+                init_command = "SET SESSION wait_timeout = 86400"
             )
         except mariadb.Error as e:
             raise (f"Error connecting to MariaDB database: {e}")
