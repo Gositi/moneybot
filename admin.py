@@ -27,6 +27,9 @@ client = discord.Client (intents=intents)
 tree = app_commands.CommandTree (client)
 guild = discord.Object (id = int (os.getenv ("ADMIN_GUILD")))
 
+#Set currency symbol
+currency = os.getenv ("CURRENCY")
+
 #Get any users balance
 @tree.command (name = "getbal", description = "ADMIN: Get any users balance", guild = guild)
 @app_commands.describe (
@@ -38,7 +41,7 @@ async def getbal (interaction: discord.Interaction, user: discord.User):
     #Make sure user exists in database
     db.ensureUserExists (user.id)
     #Respond with balance
-    await interaction.response.send_message (f"User {user.mention} has {db.getBalance (user.id):.2f} money.")
+    await interaction.response.send_message (f"User {user.mention} has {db.getBalance (user.id):.2f}{currency}.")
 
     db.commit ()
 
@@ -51,7 +54,7 @@ async def allbal (interaction: discord.Interaction):
     balances = db.getBalances ()
     s = "List of balances:"
     for userID, balance in balances.items ():
-        s += f"\n<@{userID}>: {balance:.2f}"
+        s += f"\n<@{userID}>: {balance:.2f}{currency}"
     await interaction.response.send_message (s)
 
     db.commit ()
@@ -73,7 +76,7 @@ async def chgbal (interaction: discord.Interaction, user: discord.User, amount: 
     #Perform transaction
     db.changeBalance (user.id, amount)
     db.logTransaction (None, user.id, amount, comment=comment)
-    await interaction.response.send_message (f"Changed balance of {user.mention} by {amount:.2f} with comment:\n{comment}")
+    await interaction.response.send_message (f"Changed balance of {user.mention} by {amount:.2f}{currency} with comment:\n{comment}")
 
     db.commit ()
 

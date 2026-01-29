@@ -27,6 +27,9 @@ client = discord.Client (intents=intents)
 tree = app_commands.CommandTree (client)
 guild = discord.Object (id = int (os.getenv ("GUILD")))
 
+#Set currency symbol
+currency = os.getenv ("CURRENCY")
+
 #Get your own balance
 @tree.command (name = "bal", description = "Get your balance", guild = guild)
 async def bal (interaction: discord.Interaction):
@@ -35,7 +38,7 @@ async def bal (interaction: discord.Interaction):
     #Make sure user exists
     db.ensureUserExists (interaction.user.id)
     #Respond with balance
-    await interaction.response.send_message (f"You have {db.getBalance (interaction.user.id):.2f} money.", ephemeral=True)
+    await interaction.response.send_message (f"You have {db.getBalance (interaction.user.id):.2f}{currency}.", ephemeral=True)
 
     db.commit ()
 
@@ -65,9 +68,9 @@ async def pay (interaction: discord.Interaction, recipient: discord.User, amount
         if amount <= funds:
             #Transfer money
             db.transferMoney (interaction.user.id, recipient.id, amount, comment=comment)
-            await interaction.response.send_message (f"Sent {amount:.2f} from {interaction.user.mention} to {recipient.mention} with comment:\n{comment}")
+            await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {interaction.user.mention} to {recipient.mention} with comment:\n{comment}")
         else:
-            await interaction.response.send_message (f"Insufficient balance, you currently have {funds:.2f} money left.", ephemeral=True)
+            await interaction.response.send_message (f"Insufficient balance, you currently have {funds:.2f}{currency} left.", ephemeral=True)
 
     db.commit ()
 
