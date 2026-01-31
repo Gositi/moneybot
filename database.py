@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+#Moneybot, a discord bot for handling a virtual currency
+#Copyright (C) 2025-2026 Gositi
+#License (GPL 3.0) provided in file 'LICENSE'
+
 #MariaDB
 import mariadb
 #Decimal numbers for currencies

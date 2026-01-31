@@ -65,3 +65,12 @@ CURRENCY="name/symbol of currency"
 
 ### Run the bot
 To run the main bot execute `main.py`, to run the admin bot execute `admin.py`.
+
+## Legal
+Copyright (C) 2025-2026 Gositi
+
+License (GPL 3.0) provided in file `LICENSE`
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
