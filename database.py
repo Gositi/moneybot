@@ -32,18 +32,18 @@ class Database:
 
     #Get balance of user
     def getBalance (self, user):
-        self.cur.execute ("SELECT balance FROM balances WHERE userID=?", (user,))
+        self.cur.execute ("SELECT balance FROM balances WHERE user_id=?", (user,))
         for balance in self.cur:
             return decimal.Decimal (balance [0])
 
     #Get balance of every user
     def getBalances (self):
-        self.cur.execute ("SELECT userID, balance FROM balances")
-        return {userID: balance for userID, balance in self.cur}
+        self.cur.execute ("SELECT user_id, balance FROM balances")
+        return {user_id: balance for user_id, balance in self.cur}
 
     #Set balance of user
     def setBalance (self, user, balance):
-        self.cur.execute ("UPDATE balances SET balance=? WHERE userID=?", (balance, user,))
+        self.cur.execute ("UPDATE balances SET balance=? WHERE user_id=?", (balance, user,))
 
     #Change balance of user by amount
     def changeBalance (self, user, amount):
@@ -58,9 +58,9 @@ class Database:
 
     #Log a transaction
     def logTransaction (self, sender, recipient, amount, comment=""):
-        self.cur.execute ("INSERT INTO transactionLog (senderID, recipientID, amount, comment) VALUES (?, ?, ?, ?)", (sender, recipient, amount, comment,))
+        self.cur.execute ("INSERT INTO transaction_log (sender_id, recipient_id, amount, comment) VALUES (?, ?, ?, ?)", (sender, recipient, amount, comment,))
 
     #Make sure user exists
     def ensureUserExists (self, user):
-        self.cur.execute ("INSERT IGNORE INTO balances (userID, balance) VALUES (?, ?)", (user, 0,))
+        self.cur.execute ("INSERT IGNORE INTO balances (user_id, balance) VALUES (?, ?)", (user, 0,))
 
