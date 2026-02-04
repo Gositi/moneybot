@@ -9,43 +9,34 @@ To use the bot, do the following:
 - Run the bot
 
 ### Create bot users
-To do this, we refer to the Discord Developer portal
+To do this, we refer to the Discord Developer portal.
+The important thing is that the users (one regular and one admin) has `application.commands` permission.
 
 ### Create database
-This program is made to be used with a `mariadb` database.
-The database schema is:
-```
-MariaDB [moneybot]> show tables;
-+--------------------+
-| Tables_in_moneybot |
-+--------------------+
-| balances           |
-| transactionLog     |
-+--------------------+
-2 rows in set (0.001 sec)
+This program is made to be used with a `mariadb` (or `mysql`, probably)  database.
+The database schema is as follows.
 
-MariaDB [moneybot]> desc balances;
+`balances`:
+```
 +---------+---------------+------+-----+---------+-------+
 | Field   | Type          | Null | Key | Default | Extra |
 +---------+---------------+------+-----+---------+-------+
-| userID  | bigint(20)    | NO   | PRI | NULL    |       |
-| balance | decimal(20,2) | YES  |     | NULL    |       |
+| user_id | bigint(20)    | NO   | PRI | NULL    |       |
+| balance | decimal(20,2) | NO   |     | 0.00    |       |
 +---------+---------------+------+-----+---------+-------+
-2 rows in set (0.001 sec)
+```
 
-MariaDB [moneybot]> desc transactionLog;
-+-------------+---------------+------+-----+---------------------+-------+
-| Field       | Type          | Null | Key | Default             | Extra |
-+-------------+---------------+------+-----+---------------------+-------+
-| time        | timestamp     | YES  |     | current_timestamp() |       |
-| senderID    | bigint(20)    | YES  |     | NULL                |       |
-| recipientID | bigint(20)    | YES  |     | NULL                |       |
-| amount      | decimal(20,2) | YES  |     | NULL                |       |
-| comment     | tinytext      | YES  |     | NULL                |       |
-+-------------+---------------+------+-----+---------------------+-------+
-5 rows in set (0.001 sec)
-
-MariaDB [moneybot]>
+`transaction_log`:
+```
++--------------+---------------+------+-----+---------------------+-------+
+| Field        | Type          | Null | Key | Default             | Extra |
++--------------+---------------+------+-----+---------------------+-------+
+| time         | timestamp     | YES  |     | current_timestamp() |       |
+| sender_id    | bigint(20)    | YES  |     | NULL                |       |
+| recipient_id | bigint(20)    | YES  |     | NULL                |       |
+| amount       | decimal(20,2) | YES  |     | NULL                |       |
+| comment      | tinytext      | YES  |     | NULL                |       |
++--------------+---------------+------+-----+---------------------+-------+
 ```
 
 You also need to setup a connection between Python and MariaDB.
