@@ -72,7 +72,7 @@ CURRENCY="name/symbol of currency"
 To run the main bot execute `main.py`, to run the admin bot execute `admin.py`.
 
 ## Legal
-Copyright (C) 2025-2026 Gositi
+Copyright (C) 2025-2026 Gositi, Retha
 
 License (GPL 3.0) provided in file `LICENSE`
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #Moneybot, a discord bot for handling a virtual currency
-#Copyright (C) 2025-2026 Gositi
+#Copyright (C) 2025-2026 Gositi, Retha
 #License (GPL 3.0) provided in file 'LICENSE'
 
 #MariaDB
