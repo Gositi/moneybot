@@ -26,6 +26,10 @@ class Database:
         #Get cursor to execute SQL commands
         self.cur = self.conn.cursor ()
 
+    #Truncate the name of an organisation account
+    def truncate (self, name):
+        return name[:5]
+
     #Commit commands issued
     def commit (self):
         self.conn.commit ()

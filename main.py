@@ -41,16 +41,17 @@ currency = os.getenv ("CURRENCY")
 )
 async def bal (interaction: discord.Interaction, org: str = ""):
     db.commit ()
+    name = db.truncate (org)
 
     #Make sure user exists
     db.ensureUserExists (interaction.user.id)
 
-    if org:
-        if not org in db.getUserOrgs(interaction.user.id).keys():
-            await interaction.response.send_message (f"You are not the owner of `{org}`!", ephemeral=True)
+    if name:
+        if not name in db.getUserOrgs(interaction.user.id).keys():
+            await interaction.response.send_message (f"You are not the owner of `{name}`!", ephemeral=True)
         else:
-            balance = db.getOrgBalance (org)
-            await interaction.response.send_message (f"The account `{org}` has {balance:.2f}{currency}.", ephemeral=True)
+            balance = db.getOrgBalance (name)
+            await interaction.response.send_message (f"The account `{name}` has {balance:.2f}{currency}.", ephemeral=True)
     else:
         balance = db.getBalance (interaction.user.id)
         await interaction.response.send_message (f"You have {balance:.2f}{currency} in your personal account.", ephemeral=True)
@@ -77,11 +78,12 @@ async def payusr (interaction: discord.Interaction, recipient: discord.User, amo
     comment = "Optional transaction comment/message"
 )
 async def payorg (interaction: discord.Interaction, recipient: str, amount: float, org: str = "", comment: str = ""):
-    await pay (interaction, org, None, recipient, amount, comment)
+    await pay (interaction, org, None, db.truncate (recipient), amount, comment)
 
 #General-purpose function to perform a transaction with
 async def pay (interaction, org, recipient_user, recipient_org, amount, comment):
     db.commit ()
+    name = db.truncate (org)
 
     #Make sure sender exists
     db.ensureUserExists (interaction.user.id)
@@ -101,12 +103,12 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
             await interaction.response.send_message (f"Organisation `{recipient_org}` does not exist.", ephemeral=True)
         else:
             #Check that the sender owns the potential sender org
-            if org and not org in db.getUserOrgs(interaction.user.id).keys():
-                await interaction.response.send_message (f"You are not the owner of `{org}`!", ephemeral=True)
+            if name and not name in db.getUserOrgs(interaction.user.id).keys():
+                await interaction.response.send_message (f"You are not the owner of `{name}`!", ephemeral=True)
             else:
                 #Check that the sender has enough money
-                if org:
-                    funds = db.getOrgBalance (org)
+                if name:
+                    funds = db.getOrgBalance (name)
                 else:
                     funds = db.getBalance (interaction.user.id)
 
@@ -118,7 +120,7 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
                         recipient_id = None
 
                     #Transfer money
-                    db.transferMoney (amount, interaction.user.id, org, recipient_id, recipient_org, comment=comment)
+                    db.transferMoney (amount, interaction.user.id, name, recipient_id, recipient_org, comment=comment)
                     if recipient_user:
                         await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {interaction.user.mention} to {recipient_user.mention} with comment:\n{comment}")
                     else:
