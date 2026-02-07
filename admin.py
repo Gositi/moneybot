@@ -97,12 +97,12 @@ async def addorg (interaction: discord.Interaction, user: discord.User, name: st
     #Make sure user exists
     db.ensureUserExists (user.id)
     #Check that account doesn't already exist
-    if name in db.getAllOrgs().keys():
-        await interaction.response.send_message (f"Org `{name}` already exists.")
+    if name[:5] in db.getAllOrgs().keys():
+        await interaction.response.send_message (f"Org `{name[:5]}` already exists.")
     else:
         #Create organisation account
-        db.createOrgAcc (user.id, name, desc)
-        await interaction.response.send_message (f"Org `{name}` created with owner {user.mention} and description:\n{desc}")
+        db.createOrgAcc (user.id, name[:5], desc)
+        await interaction.response.send_message (f"Org `{name[:5]}` created with owner {user.mention} and description:\n{desc}")
 
     db.commit ()
 
