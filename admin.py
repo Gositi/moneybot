@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #Moneybot, a discord bot for handling a virtual currency
-#Copyright (C) 2025-2026 Gositi
+#Copyright (C) 2025-2026 Gositi, Retha
 #License (GPL 3.0) provided in file 'LICENSE'
 
 #MariaDB
@@ -81,6 +81,154 @@ async def chgbal (interaction: discord.Interaction, user: discord.User, amount: 
     db.changeBalance (user.id, amount)
     db.logTransaction (None, user.id, amount, comment=comment)
     await interaction.response.send_message (f"Changed balance of {user.mention} by {amount:.2f}{currency} with comment:\n{comment}")
+
+    db.commit ()
+
+#Add an organisation
+@tree.command (name = "addorg", description = "ADMIN: Add an organisation account", guild = guild)
+@app_commands.describe (
+    user = "Owner of the new organisation account",
+    org = "Identifier of the organisation account",
+    desc = "Optional description of the organisation"
+)
+async def addorg (interaction: discord.Interaction, user: discord.User, org: str, desc: str = ""):
+    db.commit ()
+    name = db.truncate (org)
+
+    #Make sure user exists
+    db.ensureUserExists (user.id)
+    #Check that account doesn't already exist
+    if name in db.getAllOrgs().keys():
+        await interaction.response.send_message (f"Org `{name}` already exists.")
+    else:
+        #Create organisation account
+        db.createOrgAcc (user.id, name, desc)
+        await interaction.response.send_message (f"Org `{name}` created with owner {user.mention} and description:\n{desc}")
+
+    db.commit ()
+
+#Delete an organisation
+@tree.command (name = "delorg", description = "ADMIN: Delete an organisation account", guild = guild)
+@app_commands.describe (
+    org = "Identifier of the organisation account"
+)
+async def delorg (interaction: discord.Interaction, org: str):
+    db.commit ()
+    name = db.truncate (org)
+
+    #Transfer remaining funds of account to owner
+    user_id = db.getAllOrgs()[name][0]
+    db.transferMoney (
+        db.getOrgBalance (name),
+        user_id,
+        sender_org = name,
+        recipient_id = user_id,
+        comment = "Deletion of org. acc."
+    )
+    #Delete account
+    db.deleteOrgAcc (name)
+    await interaction.response.send_message (f"Org `{name}` of user <@{user_id}> deleted.")
+
+    db.commit ()
+
+#List all organisation accounts
+@tree.command (name = "allorgs", description = "ADMIN: List all organisation accounts", guild = guild)
+async def allorgs (interaction: discord.Interaction):
+    db.commit ()
+
+    #Get and display balances
+    orgs = db.getAllOrgs ()
+    s = "List of all orgs:"
+    for name, (user_id, balance, desc) in orgs.items ():
+        s += f"\n`{name}` (<@{user_id}>, {desc}): {balance:.2f}{currency}"
+    await interaction.response.send_message (s)
+
+    db.commit ()
+
+#List all organisation accounts
+@tree.command (name = "getorgs", description = "ADMIN: List all organisation accounts of user", guild = guild)
+@app_commands.describe (
+    user = "User to list accounts of"
+)
+async def getorgs (interaction: discord.Interaction, user: discord.User):
+    db.commit ()
+
+    #Get and display balances
+    orgs = db.getUserOrgs (user.id)
+    s = f"List of orgs owned by {user.mention}:"
+    for name, (balance, desc) in orgs.items ():
+        s += f"\n`{name}` ({desc}): {balance:.2f}{currency}"
+    await interaction.response.send_message (s)
+
+    db.commit ()
+
+#Get balance (and owner/description) of an org acc
+@tree.command (name = "orgbal", description = "ADMIN: List information about an org acc", guild = guild)
+@app_commands.describe (
+    org = "Identifier of org acc to view info of"
+)
+async def orgbal (interaction: discord.Interaction, org: str):
+    db.commit ()
+    name = db.truncate (org)
+
+    #Get and display balances
+    (user_id, balance, desc) = db.getAllOrgs()[name]
+    await interaction.response.send_message (f"Org `{name}` ({desc}) owned by <@{user_id}> has {balance:.2f}{currency}.")
+
+    db.commit ()
+
+#Get balance (and owner/description) of an org acc
+@tree.command (name = "chgorg", description = "ADMIN: Change the balance of an org account", guild = guild)
+@app_commands.describe (
+    org = "Identifier of org account",
+    amount = "Amount to change balance by",
+    comment = "Optional comment of change"
+)
+async def chgorg (interaction: discord.Interaction, org: str, amount: float, comment: str = ""):
+    db.commit ()
+    name = db.truncate (org)
+
+    #Check that org acc exists
+    if not name in db.getAllOrgs().keys():
+        await interaction.response.send_message (f"Org `{name}` does not exist.")
+    else:
+        #Round amount to send to two decimal places and verify it is valid
+        amount = decimal.Decimal (amount).quantize (decimal.Decimal ("0.01"))
+        #Perform transaction
+        db.changeOrgBalance (name, amount)
+        db.logTransaction (amount, None, recipient_org=name, comment=comment)
+        await interaction.response.send_message (f"Changed balance of `{name}` by {amount:.2f}{currency} with comment:\n{comment}")
+
+    db.commit ()
+
+#Change owner of org
+@tree.command (name = "movorg", description = "ADMIN: Change owner of org acc", guild = guild)
+@app_commands.describe (
+    org = "Identifier of org account",
+    user = "New owner"
+)
+async def movorg (interaction: discord.Interaction, org: str, user: discord.User):
+    db.commit ()
+    name = db.truncate (org)
+
+    #Change owner
+    db.changeOrgOwner (name, user.id)
+    await interaction.response.send_message (f"Changed owner of `{name}` to {user.mention}.")
+
+    db.commit ()
+
+#Get the net worth of a user
+@tree.command (name = "networth", description = "ADMIN: Calculate the net worth of a user", guild = guild)
+@app_commands.describe (
+    user = "User to calculate net worth of"
+)
+async def networth (interaction: discord.Interaction, user: discord.User):
+    db.commit ()
+
+    #Get and display balances
+    orgs = db.getUserOrgs (user.id)
+    networth = sum([balance for _, (balance, _) in orgs.items()] + [db.getBalance (user.id)])
+    await interaction.response.send_message (f"User {user.mention} has a net worth of {networth:.2f}{currency}.")
 
     db.commit ()
 

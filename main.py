@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #Moneybot, a discord bot for handling a virtual currency
-#Copyright (C) 2025-2026 Gositi
+#Copyright (C) 2025-2026 Gositi, Retha
 #License (GPL 3.0) provided in file 'LICENSE'
 
 #MariaDB
@@ -36,25 +36,54 @@ currency = os.getenv ("CURRENCY")
 
 #Get your own balance
 @tree.command (name = "bal", description = "Get your balance", guild = guild)
-async def bal (interaction: discord.Interaction):
+@app_commands.describe (
+    org = "Optional organisation account to view balance of"
+)
+async def bal (interaction: discord.Interaction, org: str = ""):
     db.commit ()
+    name = db.truncate (org)
 
     #Make sure user exists
     db.ensureUserExists (interaction.user.id)
-    #Respond with balance
-    await interaction.response.send_message (f"You have {db.getBalance (interaction.user.id):.2f}{currency}.", ephemeral=True)
+
+    if name:
+        if not name in db.getUserOrgs(interaction.user.id).keys():
+            await interaction.response.send_message (f"You are not the owner of `{name}`!", ephemeral=True)
+        else:
+            balance = db.getOrgBalance (name)
+            await interaction.response.send_message (f"The account `{name}` has {balance:.2f}{currency}.", ephemeral=True)
+    else:
+        balance = db.getBalance (interaction.user.id)
+        await interaction.response.send_message (f"You have {balance:.2f}{currency} in your personal account.", ephemeral=True)
 
     db.commit ()
 
 #Pay/transfer money to someone else
-@tree.command (name = "pay", description = "Transfer money", guild = guild)
+@tree.command (name = "payusr", description = "Transfer money to a user", guild = guild)
 @app_commands.describe (
-    recipient = "Recipient of transfer",
+    recipient = "Recipient user of transfer",
     amount = "Amount of money to transfer, up to two decimal places",
+    org = "Optional organisation account to send from",
     comment = "Optional transaction comment/message"
 )
-async def pay (interaction: discord.Interaction, recipient: discord.User, amount: float, comment: str = ""):
+async def payusr (interaction: discord.Interaction, recipient: discord.User, amount: float, org: str = "", comment: str = ""):
+    await pay (interaction, org, recipient, None, amount, comment)
+
+#Pay/transfer money to an organisation
+@tree.command (name = "payorg", description = "Transfer money to an organisation", guild = guild)
+@app_commands.describe (
+    recipient = "Recipient organisation of transfer",
+    amount = "Amount of money to transfer, up to two decimal places",
+    org = "Optional organisation account to send from",
+    comment = "Optional transaction comment/message"
+)
+async def payorg (interaction: discord.Interaction, recipient: str, amount: float, org: str = "", comment: str = ""):
+    await pay (interaction, org, None, db.truncate (recipient), amount, comment)
+
+#General-purpose function to perform a transaction with
+async def pay (interaction, org, recipient_user, recipient_org, amount, comment):
     db.commit ()
+    name = db.truncate (org)
 
     #Make sure sender exists
     db.ensureUserExists (interaction.user.id)
@@ -64,19 +93,44 @@ async def pay (interaction: discord.Interaction, recipient: discord.User, amount
     if amount < 0:
         await interaction.response.send_message (f"You cannot send a negative amount of money", ephemeral=True)
     else:
-        #Make sure recipient exists
-        db.ensureUserExists (recipient.id)
+        if not (recipient_user or recipient_org):
+            raise Exception("Either recipient_user or recipient_org needs to be specified.")
 
-        #Check that the sender has enough money
-        funds = db.getBalance (interaction.user.id)
-        if amount <= funds:
-            #Transfer money
-            db.transferMoney (interaction.user.id, recipient.id, amount, comment=comment)
-            await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {interaction.user.mention} to {recipient.mention} with comment:\n{comment}")
+        #Make sure recipient exists
+        if recipient_user:
+            db.ensureUserExists (recipient_user.id)
+        if recipient_org and not recipient_org in db.getAllOrgs().keys():
+            await interaction.response.send_message (f"Organisation `{recipient_org}` does not exist.", ephemeral=True)
         else:
-            await interaction.response.send_message (f"Insufficient balance, you currently have {funds:.2f}{currency} left.", ephemeral=True)
+            #Check that the sender owns the potential sender org
+            if name and not name in db.getUserOrgs(interaction.user.id).keys():
+                await interaction.response.send_message (f"You are not the owner of `{name}`!", ephemeral=True)
+            else:
+                #Check that the sender has enough money
+                if name:
+                    funds = db.getOrgBalance (name)
+                else:
+                    funds = db.getBalance (interaction.user.id)
+
+                if amount <= funds:
+                    #Set recipient id variable
+                    if recipient_user:
+                        recipient_id = recipient_user.id
+                    else:
+                        recipient_id = None
+
+                    #Transfer money
+                    db.transferMoney (amount, interaction.user.id, name, recipient_id, recipient_org, comment=comment)
+                    if recipient_user:
+                        await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {interaction.user.mention} to {recipient_user.mention} with comment:\n{comment}")
+                    else:
+                        await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {interaction.user.mention} to `{recipient_org}` with comment:\n{comment}")
+                else:
+                    await interaction.response.send_message (f"Insufficient balance, the selected account currently has {funds:.2f}{currency} left.", ephemeral=True)
 
     db.commit ()
+
+
 
 @client.event
 async def on_ready():

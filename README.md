@@ -26,17 +26,31 @@ The database schema is as follows.
 +---------+---------------+------+-----+---------+-------+
 ```
 
+`org_balances`:
+```
++-------------+---------------+------+-----+---------+-------+
+| Field       | Type          | Null | Key | Default | Extra |
++-------------+---------------+------+-----+---------+-------+
+| org_name    | varchar(5)    | NO   | PRI | NULL    |       |
+| user_id     | bigint(20)    | NO   |     | NULL    |       |
+| balance     | decimal(20,2) | NO   |     | 0.00    |       |
+| description | tinytext      | YES  |     | NULL    |       |
++-------------+---------------+------+-----+---------+-------+
+```
+
 `transaction_log`:
 ```
-+--------------+---------------+------+-----+---------------------+-------+
-| Field        | Type          | Null | Key | Default             | Extra |
-+--------------+---------------+------+-----+---------------------+-------+
-| time         | timestamp     | YES  |     | current_timestamp() |       |
-| sender_id    | bigint(20)    | YES  |     | NULL                |       |
-| recipient_id | bigint(20)    | YES  |     | NULL                |       |
-| amount       | decimal(20,2) | YES  |     | NULL                |       |
-| comment      | tinytext      | YES  |     | NULL                |       |
-+--------------+---------------+------+-----+---------------------+-------+
++---------------+---------------+------+-----+---------------------+-------+
+| Field         | Type          | Null | Key | Default             | Extra |
++---------------+---------------+------+-----+---------------------+-------+
+| time          | timestamp     | YES  |     | current_timestamp() |       |
+| sender_id     | bigint(20)    | YES  |     | NULL                |       |
+| sender_org    | varchar(5)    | YES  |     | NULL                |       |
+| recipient_id  | bigint(20)    | YES  |     | NULL                |       |
+| recipient_org | varchar(5)    | YES  |     | NULL                |       |
+| amount        | decimal(20,2) | YES  |     | NULL                |       |
+| comment       | tinytext      | YES  |     | NULL                |       |
++---------------+---------------+------+-----+---------------------+-------+
 ```
 
 You also need to setup a connection between Python and MariaDB.
@@ -58,7 +72,7 @@ CURRENCY="name/symbol of currency"
 To run the main bot execute `main.py`, to run the admin bot execute `admin.py`.
 
 ## Legal
-Copyright (C) 2025-2026 Gositi
+Copyright (C) 2025-2026 Gositi, Retha
 
 License (GPL 3.0) provided in file `LICENSE`
 
