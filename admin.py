@@ -248,9 +248,22 @@ async def alllogs (interaction: discord.Interaction, page: int = 0):
         s += f"\n` {time} | {str(sender_id):>20} | {str(sender_org):>10} | {str(recipient_id):>20} | {str(recipient_org):>13} | {str(amount):>23} | {comment}`"
     #Display logs
     if len(s) >= 2000:
-        await interaction.response.send_message (f"Log count too high, output message is too long to send.")
+        await interaction.response.send_message ("Log count too high, output message is too long to send.")
     else:
         await interaction.response.send_message (s)
+
+    db.commit ()
+
+#Add a comment to the logs
+@tree.command (name = "comment", description = "Add a comment to the log", guild = guild)
+@app_commands.describe (
+    comment = "Comment to write, max 255 characters."
+)
+async def comment (interaction: discord.Interaction, comment: str):
+    db.commit ()
+
+    db.addComment (comment)
+    await interaction.response.send_message (f"Comment added to logs.")
 
     db.commit ()
     
