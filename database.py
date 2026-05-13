@@ -121,5 +121,5 @@ class Database:
         return {time: (sender_id, sender_org, recipient_id, recipient_org, amount, comment) for time, sender_id, sender_org, recipient_id, recipient_org, amount, comment in self.cur}
 
     #Surprisingly, this function adds a comment! /Retha
-    def addComment(self, comment)
+    def addComment (self, comment):
         self.cur.execute ("INSERT INTO transaction_log (comment) VALUES (?)", (comment,))
