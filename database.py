@@ -118,7 +118,7 @@ class Database:
     #Get info about everything, I hope. /Retha
     def getAllLogs (self, count, offset):
         self.cur.execute ("SELECT time, sender_id, sender_org, recipient_id, recipient_org, amount, comment FROM transaction_log ORDER BY time DESC OFFSET ? ROWS FETCH FIRST ? ROWS ONLY", (offset, count,))
-        return {time: (sender_id, sender_org, recipient_id, recipient_org, amount, comment) for time, sender_id, sender_org, recipient_id, recipient_org, amount, comment in self.cur}wa
+        return {time: (sender_id, sender_org, recipient_id, recipient_org, amount, comment) for time, sender_id, sender_org, recipient_id, recipient_org, amount, comment in self.cur}
 
     #Surprisingly, this function adds a comment! /Retha
     def addComment(self, comment)
