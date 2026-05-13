@@ -78,7 +78,7 @@ async def payusr (interaction: discord.Interaction, recipient: discord.User, amo
     comment = "Optional transaction comment/message"
 )
 async def payorg (interaction: discord.Interaction, recipient: str, amount: float, org: str = "", comment: str = ""):
-    await pay (interaction, org, None, db.truncate (recipient), amount, comment)
+    await pay (interaction, db.truncate (org), None, db.truncate (recipient), amount, comment)
 
 #General-purpose function to perform a transaction with
 async def pay (interaction, org, recipient_user, recipient_org, amount, comment):
@@ -129,8 +129,18 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
                     await interaction.response.send_message (f"Insufficient balance, the selected account currently has {funds:.2f}{currency} left.", ephemeral=True)
 
     db.commit ()
-
-
+    
+#@tree.command (name = "request", description = "Send requests to the bank administration", guild = guild)
+#@app_commands.describe (
+#    type = "The type of request you wish to make",
+#    name = "Which organisation is being referred to",
+#    description = "Optional organisation account to send from",
+#    comment = "Optional transaction comment/message"
+#)
+#General-purpose function to send requests to the bank administration
+#async def request (interaction: discord.Interaction, sender_id, type: str, name: str = "", description: str = "", comment: str = "")
+    #db.logRequest()
+    #FAR from complete!
 
 @client.event
 async def on_ready():
