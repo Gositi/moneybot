@@ -241,12 +241,16 @@ async def networth (interaction: discord.Interaction, user: discord.User):
 async def alllogs (interaction: discord.Interaction, count: int = 20, page: int = 0):
     db.commit ()
 
-    #Get and display logs
+    #Get logs
     logs = db.getAllLogs (count=count, offset=page*count)
     s = f"Showing {count} log records (page {page}):"
     for time, (sender_id, sender_org, recipient_id, recipient_org, amount, comment) in logs.items ():
         s += f"\n`| {time} | <@{sender_id}> | {sender_org} | {recipient_id} | {recipient_org} | {amount} | {comment} |`"
-    await interaction.response.send_message (s)
+    #Display logs
+    if len(s) >= 2000:
+        await interaction.response.send_message (f"Log count too high, output message is too long to send.")
+    else:
+        await interaction.response.send_message (s)
 
     db.commit ()
     
