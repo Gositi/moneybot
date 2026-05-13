@@ -99,7 +99,7 @@ async def addorg (interaction: discord.Interaction, user: discord.User, org: str
     db.ensureUserExists (user.id)
     #Check that account doesn't already exist
     if name in db.getAllOrgs().keys():
-        await interaction.response.send_message (f"Org `{name}` already exists.")
+        await interaction.response.send_message (f"Org `{name}` already exists.", ephemeral=True)
     else:
         #Create organisation account
         db.createOrgAcc (user.id, name, desc)
@@ -190,7 +190,7 @@ async def chgorg (interaction: discord.Interaction, org: str, amount: float, com
 
     #Check that org acc exists
     if not name in db.getAllOrgs().keys():
-        await interaction.response.send_message (f"Org `{name}` does not exist.")
+        await interaction.response.send_message (f"Org `{name}` does not exist.", ephemeral=True)
     else:
         #Round amount to send to two decimal places and verify it is valid
         amount = decimal.Decimal (amount).quantize (decimal.Decimal ("0.01"))
@@ -211,9 +211,13 @@ async def movorg (interaction: discord.Interaction, org: str, user: discord.User
     db.commit ()
     name = db.truncate (org)
 
-    #Change owner
-    db.changeOrgOwner (name, user.id)
-    await interaction.response.send_message (f"Changed owner of `{name}` to {user.mention}.")
+    #Check that org acc exists
+    if not name in db.getAllOrgs().keys():
+        await interaction.response.send_message (f"Org `{name}` does not exist.", ephemeral=True)
+    else:
+        #Change owner
+        db.changeOrgOwner (name, user.id)
+        await interaction.response.send_message (f"Changed owner of `{name}` to {user.mention}.")
 
     db.commit ()
 
@@ -248,7 +252,7 @@ async def alllogs (interaction: discord.Interaction, page: int = 0):
         s += f"\n` {time} | {str(sender_id):>20} | {str(sender_org):>10} | {str(recipient_id):>20} | {str(recipient_org):>13} | {str(amount):>23} | {comment}`"
     #Display logs
     if len(s) >= 2000:
-        await interaction.response.send_message ("Log count too high, output message is too long to send.")
+        await interaction.response.send_message ("Log count too high, output message is too long to send.", ephemeral=True)
     else:
         await interaction.response.send_message (s)
 
@@ -263,7 +267,7 @@ async def comment (interaction: discord.Interaction, comment: str):
     db.commit ()
 
     db.addComment (comment)
-    await interaction.response.send_message (f"Comment added to logs.")
+    await interaction.response.send_message (f"Comment added to logs:\n{comment}")
 
     db.commit ()
     
