@@ -18,39 +18,39 @@ The database schema is as follows.
 
 `balances`:
 ```
-+---------+---------------+------+-----+---------+-------+
-| Field   | Type          | Null | Key | Default | Extra |
-+---------+---------------+------+-----+---------+-------+
-| user_id | bigint(20)    | NO   | PRI | NULL    |       |
-| balance | decimal(20,2) | NO   |     | 0.00    |       |
-+---------+---------------+------+-----+---------+-------+
++---------+---------------------+------+-----+---------+-------+
+| Field   | Type                | Null | Key | Default | Extra |
++---------+---------------------+------+-----+---------+-------+
+| user_id | bigint(20) unsigned | NO   | PRI | NULL    |       |
+| balance | decimal(20,2)       | NO   |     | 0.00    |       |
++---------+---------------------+------+-----+---------+-------+
 ```
 
 `org_balances`:
 ```
-+-------------+---------------+------+-----+---------+-------+
-| Field       | Type          | Null | Key | Default | Extra |
-+-------------+---------------+------+-----+---------+-------+
-| org_name    | varchar(5)    | NO   | PRI | NULL    |       |
-| user_id     | bigint(20)    | NO   |     | NULL    |       |
-| balance     | decimal(20,2) | NO   |     | 0.00    |       |
-| description | tinytext      | YES  |     | NULL    |       |
-+-------------+---------------+------+-----+---------+-------+
++-------------+---------------------+------+-----+---------+-------+
+| Field       | Type                | Null | Key | Default | Extra |
++-------------+---------------------+------+-----+---------+-------+
+| org_name    | varchar(5)          | NO   | PRI | NULL    |       |
+| user_id     | bigint(20) unsigned | NO   |     | NULL    |       |
+| balance     | decimal(20,2)       | NO   |     | 0.00    |       |
+| description | tinytext            | YES  |     | NULL    |       |
++-------------+---------------------+------+-----+---------+-------+
 ```
 
 `transaction_log`:
 ```
-+---------------+---------------+------+-----+---------------------+-------+
-| Field         | Type          | Null | Key | Default             | Extra |
-+---------------+---------------+------+-----+---------------------+-------+
-| time          | timestamp     | YES  |     | current_timestamp() |       |
-| sender_id     | bigint(20)    | YES  |     | NULL                |       |
-| sender_org    | varchar(5)    | YES  |     | NULL                |       |
-| recipient_id  | bigint(20)    | YES  |     | NULL                |       |
-| recipient_org | varchar(5)    | YES  |     | NULL                |       |
-| amount        | decimal(20,2) | YES  |     | NULL                |       |
-| comment       | tinytext      | YES  |     | NULL                |       |
-+---------------+---------------+------+-----+---------------------+-------+
++---------------+---------------------+------+-----+---------------------+-------+
+| Field         | Type                | Null | Key | Default             | Extra |
++---------------+---------------------+------+-----+---------------------+-------+
+| time          | timestamp           | YES  |     | current_timestamp() |       |
+| sender_id     | bigint(20) unsigned | YES  |     | NULL                |       |
+| sender_org    | varchar(5)          | YES  |     | NULL                |       |
+| recipient_id  | bigint(20) unsigned | YES  |     | NULL                |       |
+| recipient_org | varchar(5)          | YES  |     | NULL                |       |
+| amount        | decimal(20,2)       | YES  |     | NULL                |       |
+| comment       | tinytext            | YES  |     | NULL                |       |
++---------------+---------------------+------+-----+---------------------+-------+
 ```
 
 You also need to setup a connection between Python and MariaDB.
