@@ -114,3 +114,8 @@ class Database:
     def getUserOrgs (self, user):
         self.cur.execute ("SELECT org_name, balance, description FROM org_balances WHERE user_id=?", (user,))
         return {org_name: (balance, description) for org_name, balance, description in self.cur}
+
+    #Get info about everything, I hope. /Retha
+    def getAllLogs (self):
+        self.cur.execute ("SELECT time, sender_id, sender_org, recipient_id, recipient_org, amount, comment FROM transaction_log")
+        return {time: (sender_id, sender_org, recipient_id, recipient_org, amount, comment) for time, sender_id, sender_org, recipient_id, recipient_org, amount, comment in self.cur}

@@ -231,7 +231,18 @@ async def networth (interaction: discord.Interaction, user: discord.User):
     await interaction.response.send_message (f"User {user.mention} has a net worth of {networth:.2f}{currency}.")
 
     db.commit ()
+async def alllogs (interaction: discord.Interaction):
+    db.commit ()
 
+    #Get and display balances
+    logs = db.getAllLogs ()
+    s = "List of all logs:"
+    for time, (sender_id, sender_org, recipient_id, recipient_org, amount, comment) in logs.items ():
+        s += f"\n`| {time} | <@{sender_id}> | {sender_org} | {recipient_id} | {recipient_org} | {amount} | {comment} |`"
+    await interaction.response.send_message (s)
+
+    db.commit ()
+    
 @client.event
 async def on_ready():
     await tree.sync (guild = guild)
