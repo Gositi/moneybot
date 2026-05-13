@@ -235,15 +235,15 @@ async def networth (interaction: discord.Interaction, user: discord.User):
 #Dump all the transaction logs
 @tree.command (name = "alllogs", description = "ADMIN: Dump the whole transaction log", guild = guild)
 @app_commands.describe (
-    count = "Number of records shown",
+    count = "Number of records shown (default 20)",
     page = "Page of records (starts at 0)"
 )
-async def alllogs (interaction: discord.Interaction, count: int = None, page: int = 0):
+async def alllogs (interaction: discord.Interaction, count: int = 20, page: int = 0):
     db.commit ()
 
     #Get and display logs
     logs = db.getAllLogs (count=count, offset=page*count)
-    s = "List of all logs:"
+    s = f"Showing {count} log records (page {page}):"
     for time, (sender_id, sender_org, recipient_id, recipient_org, amount, comment) in logs.items ():
         s += f"\n`| {time} | <@{sender_id}> | {sender_org} | {recipient_id} | {recipient_org} | {amount} | {comment} |`"
     await interaction.response.send_message (s)
