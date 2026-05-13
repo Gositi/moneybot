@@ -235,17 +235,17 @@ async def networth (interaction: discord.Interaction, user: discord.User):
 #Dump all the transaction logs
 @tree.command (name = "alllogs", description = "ADMIN: Dump the whole transaction log", guild = guild)
 @app_commands.describe (
-    count = "Number of records shown (default 20)",
-    page = "Page of records (starts at 0)"
+    page = "Page of log to display, with 10 records each. Starts at 0 (most recent), which is also the default."
 )
-async def alllogs (interaction: discord.Interaction, count: int = 20, page: int = 0):
+async def alllogs (interaction: discord.Interaction, page: int = 0):
     db.commit ()
 
+    count = 10  #Good default
     #Get logs
     logs = db.getAllLogs (count=count, offset=page*count)
-    s = f"Showing {count} log records (page {page}):"
+    s = f"Showing page {page} of log records ({count} records per page):\n` time                | sender_id            | sender_org | recipient_id         | recipient_org | amount                  | comment`"
     for time, (sender_id, sender_org, recipient_id, recipient_org, amount, comment) in logs.items ():
-        s += f"\n`| {time} | <@{sender_id}> | {sender_org} | {recipient_id} | {recipient_org} | {amount} | {comment} |`"
+        s += f"\n` {time} | {str(sender_id):>20} | {str(sender_org):>10} | {str(recipient_id):>20} | {str(recipient_org):>13} | {str(amount):>23} | {comment}`"
     #Display logs
     if len(s) >= 2000:
         await interaction.response.send_message (f"Log count too high, output message is too long to send.")
