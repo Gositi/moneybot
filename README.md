@@ -54,7 +54,7 @@ The database schema is as follows.
 ```
 
 You also need to setup a connection between Python and MariaDB.
-To do this you'll need (on Ubuntu) the `mariadb-server` and `libmariadb-dev` apt packages, and the `mariadb` Python package.
+To do this you'll need (on Ubuntu) the `mariadb-server` and `libmariadb-dev` apt packages, and the Python packages in `requirements.txt`.
 
 ### Fill in the `.env` file
 Your `.env` file should look like the following:

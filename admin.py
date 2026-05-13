@@ -79,7 +79,7 @@ async def chgbal (interaction: discord.Interaction, user: discord.User, amount: 
     amount = decimal.Decimal (amount).quantize (decimal.Decimal ("0.01"))
     #Perform transaction
     db.changeBalance (user.id, amount)
-    db.logTransaction (None, user.id, amount, comment=comment)
+    db.logTransaction (amount, recipient_id=user.id, comment=comment)
     await interaction.response.send_message (f"Changed balance of {user.mention} by {amount:.2f}{currency} with comment:\n{comment}")
 
     db.commit ()
@@ -196,7 +196,7 @@ async def chgorg (interaction: discord.Interaction, org: str, amount: float, com
         amount = decimal.Decimal (amount).quantize (decimal.Decimal ("0.01"))
         #Perform transaction
         db.changeOrgBalance (name, amount)
-        db.logTransaction (amount, None, recipient_org=name, comment=comment)
+        db.logTransaction (amount, recipient_org=name, comment=comment)
         await interaction.response.send_message (f"Changed balance of `{name}` by {amount:.2f}{currency} with comment:\n{comment}")
 
     db.commit ()

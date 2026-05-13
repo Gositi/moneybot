@@ -21,7 +21,7 @@ class Database:
                 init_command = "SET SESSION wait_timeout = 86400"
             )
         except mariadb.Error as e:
-            raise (f"Error connecting to MariaDB database: {e}")
+            raise RuntimeError(f"Error connecting to MariaDB database: {e}")
 
         #Get cursor to execute SQL commands
         self.cur = self.conn.cursor ()
@@ -69,10 +69,10 @@ class Database:
             self.changeBalance (recipient_id, amount)
 
         if logging:
-            self.logTransaction (amount, sender_id, sender_org=sender_org, recipient_id=recipient_id, recipient_org=recipient_org, comment=comment)
+            self.logTransaction (amount, sender_id=sender_id, sender_org=sender_org, recipient_id=recipient_id, recipient_org=recipient_org, comment=comment)
 
     #Log a transaction
-    def logTransaction (self, amount, sender_id, sender_org=None, recipient_id=None, recipient_org=None, comment=""):
+    def logTransaction (self, amount, sender_id=None, sender_org=None, recipient_id=None, recipient_org=None, comment=""):
         self.cur.execute ("INSERT INTO transaction_log (sender_id, sender_org, recipient_id, recipient_org, amount, comment) VALUES (?, ?, ?, ?, ?, ?)", (sender_id, sender_org, recipient_id, recipient_org, amount, comment,))
 
     #Make sure user exists
