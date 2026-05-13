@@ -231,11 +231,18 @@ async def networth (interaction: discord.Interaction, user: discord.User):
     await interaction.response.send_message (f"User {user.mention} has a net worth of {networth:.2f}{currency}.")
 
     db.commit ()
-async def alllogs (interaction: discord.Interaction):
+
+#Dump all the transaction logs
+@tree.command (name = "alllogs", description = "ADMIN: Dump the whole transaction log", guild = guild)
+@app_commands.describe (
+    count = "Number of records shown",
+    page = "Page of records (starts at 0)"
+)
+async def alllogs (interaction: discord.Interaction, count: int = None, page: int = 0):
     db.commit ()
 
-    #Get and display balances
-    logs = db.getAllLogs ()
+    #Get and display logs
+    logs = db.getAllLogs (count=count, offset=page*count)
     s = "List of all logs:"
     for time, (sender_id, sender_org, recipient_id, recipient_org, amount, comment) in logs.items ():
         s += f"\n`| {time} | <@{sender_id}> | {sender_org} | {recipient_id} | {recipient_org} | {amount} | {comment} |`"

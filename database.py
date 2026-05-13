@@ -116,6 +116,9 @@ class Database:
         return {org_name: (balance, description) for org_name, balance, description in self.cur}
 
     #Get info about everything, I hope. /Retha
-    def getAllLogs (self):
-        self.cur.execute ("SELECT time, sender_id, sender_org, recipient_id, recipient_org, amount, comment FROM transaction_log")
+    def getAllLogs (self, count=None, offset=0):
+        if count:
+            self.cur.execute ("SELECT time, sender_id, sender_org, recipient_id, recipient_org, amount, comment FROM transaction_log ORDER BY time DESC OFFSET ? ROWS FETCH FIRST ? ROWS ONLY", (offset, count,))
+        else:
+            self.cur.execute ("SELECT time, sender_id, sender_org, recipient_id, recipient_org, amount, comment FROM transaction_log ORDER BY time DESC OFFSET ? ROWS", (offset,))
         return {time: (sender_id, sender_org, recipient_id, recipient_org, amount, comment) for time, sender_id, sender_org, recipient_id, recipient_org, amount, comment in self.cur}
