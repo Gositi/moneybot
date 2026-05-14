@@ -10,7 +10,6 @@ import mariadb
 import decimal
 
 class Database:
-    featureFlags = {"request": "disable"} #I still need
     def __init__ (self, user, host, passwd, database):
         #Connect to database
         try:
@@ -26,6 +25,9 @@ class Database:
 
         #Get cursor to execute SQL commands
         self.cur = self.conn.cursor ()
+
+        #Set feature flags defaults
+        self.featureFlags = {"requests": False}
 
     #Truncate the name of an organisation account
     def truncate (self, name):
@@ -133,17 +135,14 @@ class Database:
         self.cur.execute ("INSERT INTO transaction_log (comment) VALUES (?)", (comment,))
 
     #Appends a request to the request log. /Retha
-    #This thing is not ready yet, I think I'll need some help making the requests differentiable when responding to them. :/  /Retha
+    #TODO This thing is not ready yet, I think I'll need some help making the requests differentiable when responding to them. :/  /Retha
     #def logRequest (self, sender_id=None, type, name=None, description="", comment=""):
         #self.cur.execute ("INSERT INTO request_log (request_id, sender_id, type, name, description, comment, response) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (sender_id, type, name, description, comment, "",))
 
     #Sets a feature flag to the specified value. /Retha
-    def setFlag (self, flag, value=None):
+    def setFlag (self, flag, value):
         self.featureFlags[flag] = value
 
     #Gets the value of a feature flag. /Retha
     def getFlag (self, flag):
         return self.featureFlags[flag]
-
-
-    def replyRequest

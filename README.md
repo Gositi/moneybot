@@ -53,6 +53,16 @@ The database schema is as follows.
 +---------------+---------------------+------+-----+---------------------+-------+
 ```
 
+`feature_flags`:
+```
++-------+------------+------+-----+---------+-------+
+| Field | Type       | Null | Key | Default | Extra |
++-------+------------+------+-----+---------+-------+
+| flag  | tinytext   | NO   |     | NULL    |       |
+| value | tinyint(1) | YES  |     | NULL    |       |
++-------+------------+------+-----+---------+-------+
+```
+
 You also need to setup a connection between Python and MariaDB.
 To do this you'll need (on Ubuntu) the `mariadb-server` and `libmariadb-dev` apt packages, and the Python packages in `requirements.txt`.
 

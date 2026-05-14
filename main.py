@@ -140,26 +140,27 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
     db.commit ()
     
 @tree.command (name = "request", description = "Send a request to the bank administration", guild = guild)
+@app_commands.choices(category=[
+    app_commands.Choice(name="Create organisation", value="org.create"),
+    app_commands.Choice(name="Transfer organisation", value="org.transfer"),
+    app_commands.Choice(name="Delete organisation", value="org.delete"),
+    app_commands.Choice(name="Other", value="other")
+])
 @app_commands.describe (
-    category = "(Max 20 characters) The general type of request you wish to make. Type in 'help' here for a list of possible types",
-    name = "(Partially optional) Name of organisation",
+    category = "The general type of request you wish to make.",
+    name = "Name of organisation",
     description = "(Partially optional) Description of organisation",
     comment = "Optional comment/message. You may go into detail on your request here"
 )
 #General-purpose function to send requests to the bank administration /Retha
-async def request (interaction: discord.Interaction, sender_id, category: str, name: str = "", description: str = "", comment: str = "")
-    if db.getFlag("request") == "disable":
+async def request (interaction: discord.Interaction, category: str, name: str = "", description: str = "", comment: str = ""):
+    #Verify feature is enabled
+    if not db.getFlag("request"):
         await interaction.response.send_message ("This feature has been disabled.", ephemeral=True)
         return
-    validOrgTypes = ["create org", "transfer org", "delete org"]
-    validAllTypes = ["manual", "help"] + validOrgTypes
-    validTypesHelp = {
-        "create org": "Sends a request to the bank administration to open an account in your name with the specified name & description.\nRequires both the name & description argument filled in.",
-        "transfer org": "Sends a request to the bank administration to transfer one of your account(s) with the specified name to the specified person in the description (user ID is heavily recommended).\nRequires both the name & description argument filled in.",
-        "delete org": "Sends a request to the bank administration to delete one of your account(s) with the specified name.\nRequires the name argument filled in.",
-        "manual": "Sends an unfiltered request to the bank administration, without any guardrails which the other request types have.\nUseful for special requests or suggestions which may not fit in any other categories.",
-        "help": "Does NOT send anything to the bank administration, but gives information about the other request categories.\nBased on the fact you're reading this you've likely figured this category out, so good job! ɖ:"
-    }
+
+    #TODO Actually add request, using db.logRequest
+    await interaction.response.send_message ("This feature is not finished yet.", ephemeral=True)
 
 @client.event
 async def on_ready():
