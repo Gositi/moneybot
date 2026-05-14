@@ -130,17 +130,66 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
 
     db.commit ()
     
-#@tree.command (name = "request", description = "Send requests to the bank administration", guild = guild)
-#@app_commands.describe (
-#    type = "The type of request you wish to make",
-#    name = "Which organisation is being referred to",
-#    description = "Optional organisation account to send from",
-#    comment = "Optional transaction comment/message"
-#)
-#General-purpose function to send requests to the bank administration
-#async def request (interaction: discord.Interaction, sender_id, type: str, name: str = "", description: str = "", comment: str = "")
-    #db.logRequest()
-    #FAR from complete!
+@tree.command (name = "request", description = "Send a request to the bank administration", guild = guild)
+@app_commands.describe (
+    category = "(Max 20 characters) The general type of request you wish to make. Type in 'help' here for a list of possible types",
+    name = "(Partially optional) Name of organisation",
+    description = "(Partially optional) Description of organisation",
+    comment = "Optional comment/message. You may go into detail on your request here"
+)
+#General-purpose function to send requests to the bank administration /Retha
+async def request (interaction: discord.Interaction, sender_id, category: str, name: str = "", description: str = "", comment: str = "")
+    if db.getFlag("request") == "disable":
+        await interaction.response.send_message ("This feature has been disabled.", ephemeral=True)
+        return
+    validOrgTypes = ["create org", "transfer org", "delete org"]
+    validAllTypes = ["manual", "help"] + validOrgTypes
+    validTypesHelp = {
+        "create org": "Sends a request to the bank administration to open an account in your name with the specified name & description.\nRequires both the name & description argument filled in.",
+        "transfer org": "Sends a request to the bank administration to transfer one of your account(s) with the specified name to the specified person in the description (user ID is heavily recommended).\nRequires both the name & description argument filled in.",
+        "delete org": "Sends a request to the bank administration to delete one of your account(s) with the specified name.\nRequires the name argument filled in.",
+        "manual": "Sends an unfiltered request to the bank administration, without any guardrails which the other request types have.\nUseful for special requests or suggestions which may not fit in any other categories.",
+        "help": "Does NOT send anything to the bank administration, but gives information about the other request categories.\nBased on the fact you're reading this you've likely figured this category out, so good job! ɖ:"
+    }
+
+    #Checks that the category is valid.
+    if not category == category[:20]:
+        await interaction.response.send_message (f"\'{category}\' is too long!", ephemeral=True)
+        return
+    if category not in validAllTypes:
+        await interaction.response.send_message (f"{category} is not a valid category! Run the command with type 'help' for a list of valid types of request", ephemeral=True)
+        return
+        if category not in validAllTypes:
+            await interaction.response.send_message (f"{category} is not a valid type! Run the command without a description to ", ephemeral=True)
+            return
+
+    #Kinda just does its own thing.
+    if category == "help":
+        if not description:
+            s = "\n - ".join(validAllTypes)
+            await interaction.response.send_message (f"Valid categories:\n{s}\n\nYou can add any valid category to the description of a help request for more information.", ephemeral=True)
+            return
+        await interaction.response.send_message (f"{description}:\n{validTypesHelp[description]}", ephemeral=True)
+        return
+
+    #Checks whether the arguments are compatible with the request category argument & prevents the command from proceeding if incompatibilities are detected.
+    if category in validOrgTypes:
+        if not name:
+            await interaction.response.send_message (f"The {category} category requires the name argument!", ephemeral=True)
+            return
+        if not name == db.truncate(name):
+            await interaction.response.send_message (f"The name {name} is too long!", ephemeral=True)
+        if not type == "delete org":
+            if not description: #NOTE: This check might not be needed, but since I can't test my code, it's best to be safe. /Retha
+                await interaction.response.send_message (f"The {category} category requires the description argument!", ephemeral=True)
+                return
+
+    #Commits the request to the database if it has made it this far.
+    db.commit()
+    #Just pretend something happens here.
+    #db.logRequest(sender_id, category, name, description, comment)
+    db.commit()
+    await interaction.response.send_message (f"The {category} request has been sent!", ephemeral=True)
 
 @client.event
 async def on_ready():
