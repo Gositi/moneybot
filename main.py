@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 import os
 #Decimal numbers for currencies
 import decimal
+import enum
 
 load_dotenv ()
 
@@ -146,6 +147,13 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
     await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {sender} to {recipient}{comment}")
 
     db.commit ()
+
+class requestCategories(str, enum.Enum):
+    Help = "help",
+    Manual = "manual",
+    CreateOrg = "create org",
+    TransferOrg = "transfer org",
+    DeleteOrg = "delete org"
     
 @tree.command (name = "request", description = "Send a request to the bank administration", guild = guild)
 @app_commands.describe (
@@ -155,19 +163,29 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
     comment = "Optional comment/message. You may go into detail on your request here"
 )
 #General-purpose function to send requests to the bank administration /Retha
-async def request (interaction: discord.Interaction, sender_id, category: str, name: str = "", description: str = "", comment: str = "")
-    if db.getFlag("request") == "disable":
+async def request (interaction: discord.Interaction, sender_id, category: requestCategories, name: str = "", description: str = "", comment: str = "")
+    if db.getFlag("request", False) == "disable":
         await interaction.response.send_message ("This feature has been disabled.", ephemeral=True)
         return
-    validOrgTypes = ["create org", "transfer org", "delete org"]
-    validAllTypes = ["manual", "help"] + validOrgTypes
+    validOrgTypes = [requestCategories.CreateOrg, requestCategories.TransferOrg, requestCategories.DeleteOrg]
     validTypesHelp = {
-        "create org": "Sends a request to the bank administration to open an account in your name with the specified name & description.\nRequires both the name & description argument filled in.",
-        "transfer org": "Sends a request to the bank administration to transfer one of your account(s) with the specified name to the specified person in the description (user ID is heavily recommended).\nRequires both the name & description argument filled in.",
-        "delete org": "Sends a request to the bank administration to delete one of your account(s) with the specified name.\nRequires the name argument filled in.",
-        "manual": "Sends an unfiltered request to the bank administration, without any guardrails which the other request types have.\nUseful for special requests or suggestions which may not fit in any other categories.",
-        "help": "Does NOT send anything to the bank administration, but gives information about the other request categories.\nBased on the fact you're reading this you've likely figured this category out, so good job! ɖ:"
+        "Help": "Does NOT send anything to the bank administration, but gives information about the other request categories.\nBased on the fact you're reading this you've likely figured this category out, so good job! ɖː",
+        "Manual": "Sends an unfiltered request to the bank administration, without any guardrails which the other request types have.\nUseful for special requests or suggestions which may not fit in any other categories.",
+        "CreateOrg": "Sends a request to the bank administration to open an account in your name with the specified name & description.\nRequires both the name & description argument filled in.",
+        "TransferOrg": "Sends a request to the bank administration to transfer one of your account(s) with the specified name to the specified person in the description (user ID is heavily recommended).\nRequires both the name & description argument filled in.",
+        "DeleteOrg": "Sends a request to the bank administration to delete one of your account(s) with the specified name.\nRequires the name argument filled in."
     }
+
+    if category == requestCategories.Help:
+        if not description:
+            await interaction.response.send_message ("Type in a request category into the description argument for relevant information.", ephemeral=True)
+        elif description in validTypesHelp:
+            await interaction.response.send_message (f"Category {description}:\n{validTypesHelp[description]}")
+        else:
+            await interaction.response.send_message (f"{description} is not a valid category. Please input the category as it is written in the category argument.")
+        return
+
+    #Will continue work after lunch; commiting for now. /Retha
 
 @client.event
 async def on_ready():
