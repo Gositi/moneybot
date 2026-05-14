@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 import os
 #Decimal numbers for currencies
 import decimal
+#Enum types for multi-choice interactions
+import enum
 
 load_dotenv ()
 
@@ -94,50 +96,65 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
     amount = decimal.Decimal (amount).quantize (decimal.Decimal ("0.01"))
     if amount < 0:
         await interaction.response.send_message (f"You cannot send a negative amount of money", ephemeral=True)
+        return
+    if not (recipient_user or recipient_org):
+        raise Exception("Either recipient_user or recipient_org needs to be specified.")
+
+    #Make sure recipient exists
+    if recipient_user:
+        db.ensureUserExists (recipient_user.id)
+    if recipient_org and not recipient_org in db.getAllOrgs().keys():
+        await interaction.response.send_message (f"Organisation `{recipient_org}` does not exist.", ephemeral=True)
+        return
+        
+    #Check that the sender owns the potential sender org
+    if org and not org in db.getUserOrgs(interaction.user.id).keys():
+        await interaction.response.send_message (f"You are not the owner of `{org}`!", ephemeral=True)
+        return
+        
+    #Check that the sender has enough money
+    if org:
+        funds = db.getOrgBalance (org)
     else:
-        if not (recipient_user or recipient_org):
-            raise Exception("Either recipient_user or recipient_org needs to be specified.")
+        funds = db.getBalance (interaction.user.id)
+    if amount > funds:
+        await interaction.response.send_message (f"Insufficient balance, the selected account currently has {funds:.2f}{currency} left.", ephemeral=True)
+        return
+        
+    #Set recipient id variable
+    if recipient_user:
+        recipient_id = recipient_user.id
+    else:
+        recipient_id = None
 
-        #Make sure recipient exists
-        if recipient_user:
-            db.ensureUserExists (recipient_user.id)
-        if recipient_org and not recipient_org in db.getAllOrgs().keys():
-            await interaction.response.send_message (f"Organisation `{recipient_org}` does not exist.", ephemeral=True)
-        else:
-            #Check that the sender owns the potential sender org
-            if org and not org in db.getUserOrgs(interaction.user.id).keys():
-                await interaction.response.send_message (f"You are not the owner of `{org}`!", ephemeral=True)
-            else:
-                #Check that the sender has enough money
-                if org:
-                    funds = db.getOrgBalance (org)
-                else:
-                    funds = db.getBalance (interaction.user.id)
+    #Transfer money
+    db.transferMoney (amount, interaction.user.id, org, recipient_id, recipient_org, comment=comment)
+    #Print confirmation
+    if org:
+        sender = f"`{org}`"
+    else:
+        sender = f"{interaction.user.mention}"
 
-                if amount <= funds:
-                    #Set recipient id variable
-                    if recipient_user:
-                        recipient_id = recipient_user.id
-                    else:
-                        recipient_id = None
+    if recipient_org:
+        recipient = f"`{recipient_org}`"
+    else:
+        recipient = f"{recipient_user.mention}"
 
-                    #Transfer money
-                    db.transferMoney (amount, interaction.user.id, org, recipient_id, recipient_org, comment=comment)
-                    #Print confirmation
-                    if org: sender = f"`{org}`"
-                    else: sender = f"{interaction.user.mention}"
+    if comment:
+        comment = f" with comment:\n{comment}"
+    else:
+        comment = "."
 
-                    if recipient_org: recipient = f"`{recipient_org}`"
-                    else: recipient = f"{recipient_user.mention}"
-
-                    if comment: comment = f" with comment:\n{comment}"
-                    else: comment = "."
-
-                    await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {sender} to {recipient}{comment}")
-                else:
-                    await interaction.response.send_message (f"Insufficient balance, the selected account currently has {funds:.2f}{currency} left.", ephemeral=True)
+    await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {sender} to {recipient}{comment}")
 
     db.commit ()
+
+class requestCategories(str, enum.Enum):
+    Help = "help",
+    Manual = "manual",
+    CreateOrg = "create org",
+    TransferOrg = "transfer org",
+    DeleteOrg = "delete org"
     
 @tree.command (name = "request", description = "Send a request to the bank administration", guild = guild)
 @app_commands.choices(category=[
@@ -153,14 +170,29 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
     comment = "Optional comment/message. You may go into detail on your request here"
 )
 #General-purpose function to send requests to the bank administration /Retha
-async def request (interaction: discord.Interaction, category: str, name: str = "", description: str = "", comment: str = ""):
-    #Verify feature is enabled
-    if not db.getFlag("request"):
+async def request (interaction: discord.Interaction, category: requestCategories, name: str = "", description: str = "", comment: str = "")
+    if db.getFlag("request", False) == "disable":
         await interaction.response.send_message ("This feature has been disabled.", ephemeral=True)
         return
+    validOrgTypes = [requestCategories.CreateOrg, requestCategories.TransferOrg, requestCategories.DeleteOrg]
+    validTypesHelp = {
+        "Help": "Does NOT send anything to the bank administration, but gives information about the other request categories.\nBased on the fact you're reading this you've likely figured this category out, so good job! ɖː",
+        "Manual": "Sends an unfiltered request to the bank administration, without any guardrails which the other request types have.\nUseful for special requests or suggestions which may not fit in any other categories.",
+        "CreateOrg": "Sends a request to the bank administration to open an account in your name with the specified name & description.\nRequires both the name & description argument filled in.",
+        "TransferOrg": "Sends a request to the bank administration to transfer one of your account(s) with the specified name to the specified person in the description (user ID is heavily recommended).\nRequires both the name & description argument filled in.",
+        "DeleteOrg": "Sends a request to the bank administration to delete one of your account(s) with the specified name.\nRequires the name argument filled in."
+    }
 
-    #TODO Actually add request, using db.logRequest
-    await interaction.response.send_message ("This feature is not finished yet.", ephemeral=True)
+    if category == requestCategories.Help:
+        if not description:
+            await interaction.response.send_message ("Type in a request category into the description argument for relevant information.", ephemeral=True)
+        elif description in validTypesHelp:
+            await interaction.response.send_message (f"Category {description}:\n{validTypesHelp[description]}")
+        else:
+            await interaction.response.send_message (f"{description} is not a valid category. Please input the category as it is written in the category argument.")
+        return
+
+    #Will continue work after lunch; commiting for now. /Retha
 
 @client.event
 async def on_ready():

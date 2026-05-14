@@ -27,7 +27,7 @@ class Database:
         self.cur = self.conn.cursor ()
 
         #Define feature flags defaults
-        featureFlagDefaults = {"requests": False}
+        featureFlagDefaults = {"requests": "disable"}
         #Ensure that every flag has a db row
         self.conn.commit ()
         for flag, value in featureFlagDefaults.items ():
@@ -147,8 +147,22 @@ class Database:
     def setFlag (self, flag, value):
         self.cur.execute ("UPDATE feature_flags SET value=? WHERE flag=?", (value, flag,))
 
-    #Gets the value of a feature flag
-    def getFlag (self, flag):
+    #Gets the value of a feature flag. /Retha
+    def getFlag (self, flag, forceBool: bool=None, defaultBool: bool=None):
         self.cur.execute ("SELECT value FROM feature_flags WHERE flag=?", (flag,))
         for value in self.cur:
-            return bool(value[0])
+            v = value[0]
+            #Conforms the flag value to whatever the calling function expects.
+            if forceBool == True and v not in [True, False]:
+                if v in ["enable", "True"]:
+                    v = True
+                elif v in ["disable", "False"]:
+                    v = False
+                else:
+                    v = defaultBool
+            elif forceBool == False:
+                if v == True:
+                    v = "enable"
+                elif v == False:
+                    v = "disable"
+            return v

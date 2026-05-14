@@ -55,12 +55,12 @@ The database schema is as follows.
 
 `feature_flags`:
 ```
-+-------+------------+------+-----+---------+-------+
-| Field | Type       | Null | Key | Default | Extra |
-+-------+------------+------+-----+---------+-------+
-| flag  | tinytext   | NO   | UNI | NULL    |       |
-| value | tinyint(1) | YES  |     | NULL    |       |
-+-------+------------+------+-----+---------+-------+
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| flag  | tinytext | NO   | UNI | NULL    |       |
+| value | tinytext | NO   |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
 ```
 
 You also need to setup a connection between Python and MariaDB.

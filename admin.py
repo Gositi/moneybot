@@ -280,7 +280,7 @@ async def comment (interaction: discord.Interaction, comment: str):
     flag = "What flag should be interacted with.",
     value = "What the flag should be set to, omit to get flag value."
 )
-async def flagman (interaction: discord.Interaction, flag: str, value: bool=None):
+async def flagman (interaction: discord.Interaction, flag: str, value: str=None):
     db.commit ()
 
     if value is None:
