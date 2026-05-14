@@ -189,10 +189,38 @@ async def request (interaction: discord.Interaction, category: requestCategories
         elif description in validTypesHelp:
             await interaction.response.send_message (f"Category {description}:\n{validTypesHelp[description]}")
         else:
-            await interaction.response.send_message (f"{description} is not a valid category. Please input the category as it is written in the category argument.")
+            await interaction.response.send_message (f"{description} is not a valid category. Please input the category as it is written in the category argument.", ephemeral=True)
         return
 
-    #Will continue work after lunch; commiting for now. /Retha
+    #Verifies that the arguments are not too long.
+    if name:
+        if name != db.truncate(name):
+            await interaction.response.send_message (f"(Name is too long! Maximum is {len(db.truncate(name))} characters!", ephemeral=True)
+            return
+    if description:
+        if description != description[:255]:
+            await interaction.response.send_message ("Description is too long! Maximum is 255 characters!", ephemeral=True)
+            return
+    if comment:
+        if comment != comment[:255]:
+            await interaction.response.send_message ("Comment is too long! Maximum is 255 characters!", ephemeral=True)
+            return
+
+    #If the category is related to orgs, checks if the necessary arguments are present.
+    if category in validOrgTypes:
+        if not name:
+            await interaction.response.send_message (f"The {category} category requires the name argument!", ephemeral=True)
+            return
+        if category is TransferOrg:
+            if not description:
+                await interaction.response.send_message (f"The {category} category requires the description argument!", ephemeral=True)
+                return
+
+    #Sends the request if it has made it past all checks.
+    db.commit()
+    db.logRequest(sender_id, category, name, description, comment)
+    db.commit()
+    await interaction.response.send_message (f"The {category} request has been sent!", ephemeral=True)
 
 @client.event
 async def on_ready():
