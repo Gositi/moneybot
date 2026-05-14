@@ -271,14 +271,13 @@ async def comment (interaction: discord.Interaction, comment: str):
 
     db.commit ()
 
-#Add a comment to the logs
+#Sets & gets flag values.
 @tree.command (name = "flagman", description = "ADMIN: Manages flags, setting the flags to a new value if given, otherwise simply returns the current value of the flag.", guild = guild)
 @app_commands.describe (
     flag = "What flag should be interacted with.",
     value = "(Optional) What the flag should be set to.",
-    loud = "(Optional, default is false) Determines if getting the flag produces a public message.\nDoes not apply to setting flags, as those will always be public.
 )
-async def flagman (interaction: discord.Interaction, flag: str, value: str=None, loud: bool=False):
+async def flagman (interaction: discord.Interaction, flag: str, value: str=None):
     if value:
         if value == "clear":
             db.setFlag(flag) = None
@@ -287,11 +286,11 @@ async def flagman (interaction: discord.Interaction, flag: str, value: str=None,
             db.setFlag(flag) = value
             await interaction.response.send_message (f"Flag {flag} set to {value}.")
         return
-    v = db.getFlags(key) #NOTE: I would like to reuse the value variable here, but I'll play it safe. /Retha
+    v = db.getFlags(key)
     if v:
-        await interaction.response.send_message (f"Flag {flag} is {v}.", ephemeral=not loud)
+        await interaction.response.send_message (f"Flag {flag} is {v}.")
     else:
-        await interaction.response.send_message (f"Flag {flag} isn't set.", ephemeral=not loud)
+        await interaction.response.send_message (f"Flag {flag} isn't set.")
 
 @tree.command (name = "getRequests", description = "ADMIN: Gets requests & prints them in a list. The requests can optionally be filtered.", guild = guild)
 @app_commands.describe (
