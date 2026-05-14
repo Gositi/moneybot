@@ -41,17 +41,17 @@ currency = os.getenv ("CURRENCY")
 )
 async def bal (interaction: discord.Interaction, org: str = ""):
     db.commit ()
-    name = db.truncate (org)
+    org = db.truncate (org)
 
     #Make sure user exists
     db.ensureUserExists (interaction.user.id)
 
-    if name:
-        if not name in db.getUserOrgs(interaction.user.id).keys():
-            await interaction.response.send_message (f"You are not the owner of `{name}`!", ephemeral=True)
+    if org:
+        if not org in db.getUserOrgs(interaction.user.id).keys():
+            await interaction.response.send_message (f"You are not the owner of `{org}`!", ephemeral=True)
         else:
-            balance = db.getOrgBalance (name)
-            await interaction.response.send_message (f"The account `{name}` has {balance:.2f}{currency}.", ephemeral=True)
+            balance = db.getOrgBalance (org)
+            await interaction.response.send_message (f"The account `{org}` has {balance:.2f}{currency}.", ephemeral=True)
     else:
         balance = db.getBalance (interaction.user.id)
         await interaction.response.send_message (f"You have {balance:.2f}{currency} in your personal account.", ephemeral=True)
@@ -78,12 +78,14 @@ async def payusr (interaction: discord.Interaction, recipient: discord.User, amo
     comment = "Optional transaction comment/message"
 )
 async def payorg (interaction: discord.Interaction, recipient: str, amount: float, org: str = "", comment: str = ""):
-    await pay (interaction, db.truncate (org), None, db.truncate (recipient), amount, comment)
+    await pay (interaction, org, None, recipient, amount, comment)
 
 #General-purpose function to perform a transaction with
 async def pay (interaction, org, recipient_user, recipient_org, amount, comment):
     db.commit ()
-    name = db.truncate (org)
+
+    if org: org = db.truncate (org)
+    if recipient_org: recipient_org = db.truncate (recipient_org)
 
     #Make sure sender exists
     db.ensureUserExists (interaction.user.id)
@@ -103,12 +105,12 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
             await interaction.response.send_message (f"Organisation `{recipient_org}` does not exist.", ephemeral=True)
         else:
             #Check that the sender owns the potential sender org
-            if name and not name in db.getUserOrgs(interaction.user.id).keys():
-                await interaction.response.send_message (f"You are not the owner of `{name}`!", ephemeral=True)
+            if org and not org in db.getUserOrgs(interaction.user.id).keys():
+                await interaction.response.send_message (f"You are not the owner of `{org}`!", ephemeral=True)
             else:
                 #Check that the sender has enough money
-                if name:
-                    funds = db.getOrgBalance (name)
+                if org:
+                    funds = db.getOrgBalance (org)
                 else:
                     funds = db.getBalance (interaction.user.id)
 
@@ -120,11 +122,18 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
                         recipient_id = None
 
                     #Transfer money
-                    db.transferMoney (amount, interaction.user.id, name, recipient_id, recipient_org, comment=comment)
-                    if recipient_user:
-                        await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {interaction.user.mention} to {recipient_user.mention} with comment:\n{comment}")
-                    else:
-                        await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {interaction.user.mention} to `{recipient_org}` with comment:\n{comment}")
+                    db.transferMoney (amount, interaction.user.id, org, recipient_id, recipient_org, comment=comment)
+                    #Print confirmation
+                    if org: sender = f"`{org}`"
+                    else: sender = f"{interaction.user.mention}"
+
+                    if recipient_org: recipient = f"`{recipient_org}`"
+                    else: recipient = f"{recipient_user.mention}"
+
+                    if comment: comment = f" with comment:\n{comment}"
+                    else: comment = "."
+
+                    await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {sender} to {recipient}{comment}")
                 else:
                     await interaction.response.send_message (f"Insufficient balance, the selected account currently has {funds:.2f}{currency} left.", ephemeral=True)
 
@@ -151,45 +160,6 @@ async def request (interaction: discord.Interaction, sender_id, category: str, n
         "manual": "Sends an unfiltered request to the bank administration, without any guardrails which the other request types have.\nUseful for special requests or suggestions which may not fit in any other categories.",
         "help": "Does NOT send anything to the bank administration, but gives information about the other request categories.\nBased on the fact you're reading this you've likely figured this category out, so good job! ɖ:"
     }
-
-    #Checks that the category is valid.
-    if not category == category[:20]:
-        await interaction.response.send_message (f"\'{category}\' is too long!", ephemeral=True)
-        return
-    if category not in validAllTypes:
-        await interaction.response.send_message (f"{category} is not a valid category! Run the command with type 'help' for a list of valid types of request", ephemeral=True)
-        return
-        if category not in validAllTypes:
-            await interaction.response.send_message (f"{category} is not a valid type! Run the command without a description to ", ephemeral=True)
-            return
-
-    #Kinda just does its own thing.
-    if category == "help":
-        if not description:
-            s = "\n - ".join(validAllTypes)
-            await interaction.response.send_message (f"Valid categories:\n{s}\n\nYou can add any valid category to the description of a help request for more information.", ephemeral=True)
-            return
-        await interaction.response.send_message (f"{description}:\n{validTypesHelp[description]}", ephemeral=True)
-        return
-
-    #Checks whether the arguments are compatible with the request category argument & prevents the command from proceeding if incompatibilities are detected.
-    if category in validOrgTypes:
-        if not name:
-            await interaction.response.send_message (f"The {category} category requires the name argument!", ephemeral=True)
-            return
-        if not name == db.truncate(name):
-            await interaction.response.send_message (f"The name {name} is too long!", ephemeral=True)
-        if not type == "delete org":
-            if not description: #NOTE: This check might not be needed, but since I can't test my code, it's best to be safe. /Retha
-                await interaction.response.send_message (f"The {category} category requires the description argument!", ephemeral=True)
-                return
-
-    #Commits the request to the database if it has made it this far.
-    db.commit()
-    #Just pretend something happens here.
-    #db.logRequest(sender_id, category, name, description, comment)
-    db.commit()
-    await interaction.response.send_message (f"The {category} request has been sent!", ephemeral=True)
 
 @client.event
 async def on_ready():
