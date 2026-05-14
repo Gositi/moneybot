@@ -142,8 +142,22 @@ class Database:
         self.featureFlags[flag] = value
 
     #Gets the value of a feature flag. /Retha
-    def getFlag (self, flag):
-        return self.featureFlags[flag]
+    def getFlag (self, flag, forceBool: bool=None, defaultBool: bool=None):
+        v = self.featureFlags[flag]
+        #Conforms the flag value to whatever the calling function expects.
+        if forceBool == True and v not in [True, False]:
+            if v in ["enable", "True"]:
+                v = True
+            elif v in ["disable", "False"]:
+                v = False
+            else:
+                v = defaultBool
+        elif forceBool == False:
+            if v == True:
+                v = "enable"
+            elif v == False:
+                v = "disable"
+        return v
 
 
     def replyRequest
