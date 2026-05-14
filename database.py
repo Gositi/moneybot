@@ -10,6 +10,7 @@ import mariadb
 import decimal
 
 class Database:
+    featureFlags = {"request": "disable"} #I still need
     def __init__ (self, user, host, passwd, database):
         #Connect to database
         try:
@@ -115,6 +116,13 @@ class Database:
         self.cur.execute ("SELECT org_name, balance, description FROM org_balances WHERE user_id=?", (user,))
         return {org_name: (balance, description) for org_name, balance, description in self.cur}
 
+    #Gets if the user owns the org, or who owns the org if a user isn't passed /Retha
+    def checkOrgOwner (self, org, user=None):
+        owner = self.cur.execute("SELECT user_id FROM org_balances WHERE org_name=?", (org,))
+        if not user:
+            return owner
+        return user == owner
+        
     #Get info about everything, I hope. /Retha
     def getAllLogs (self, count, offset):
         self.cur.execute ("SELECT time, sender_id, sender_org, recipient_id, recipient_org, amount, comment FROM transaction_log ORDER BY time DESC OFFSET ? ROWS FETCH FIRST ? ROWS ONLY", (offset, count,))
@@ -123,3 +131,19 @@ class Database:
     #Surprisingly, this function adds a comment! /Retha
     def addComment (self, comment):
         self.cur.execute ("INSERT INTO transaction_log (comment) VALUES (?)", (comment,))
+
+    #Appends a request to the request log. /Retha
+    #This thing is not ready yet, I think I'll need some help making the requests differentiable when responding to them. :/  /Retha
+    #def logRequest (self, sender_id=None, type, name=None, description="", comment=""):
+        #self.cur.execute ("INSERT INTO request_log (request_id, sender_id, type, name, description, comment, response) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (sender_id, type, name, description, comment, "",))
+
+    #Sets a feature flag to the specified value. /Retha
+    def setFlag (self, flag, value=None):
+        self.featureFlags[flag] = value
+
+    #Gets the value of a feature flag. /Retha
+    def getFlag (self, flag):
+        return self.featureFlags[flag]
+
+
+    def replyRequest
