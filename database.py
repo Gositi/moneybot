@@ -26,8 +26,13 @@ class Database:
         #Get cursor to execute SQL commands
         self.cur = self.conn.cursor ()
 
-        #Set feature flags defaults
-        self.featureFlags = {"requests": False}
+        #Define feature flags defaults
+        featureFlagDefaults = {"requests": False}
+        #Ensure that every flag has a db row
+        self.conn.commit ()
+        for flag, value in featureFlagDefaults.items ():
+            self.cur.execute ("INSERT IGNORE feature_flags (flag, value) VALUES (?, ?)", (flag, value,))
+        self.conn.commit ()
 
     #Truncate the name of an organisation account
     def truncate (self, name):
@@ -118,12 +123,11 @@ class Database:
         self.cur.execute ("SELECT org_name, balance, description FROM org_balances WHERE user_id=?", (user,))
         return {org_name: (balance, description) for org_name, balance, description in self.cur}
 
-    #Gets if the user owns the org, or who owns the org if a user isn't passed /Retha
-    def checkOrgOwner (self, org, user=None):
-        owner = self.cur.execute("SELECT user_id FROM org_balances WHERE org_name=?", (org,))
-        if not user:
-            return owner
-        return user == owner
+    #Get the owner of a certain org
+    def getOrgOwner (self, org):
+        self.cur.execute("SELECT user_id FROM org_balances WHERE org_name=?", (org,))
+        for user_id in self.cur:
+            return user_id[0]
         
     #Get info about everything, I hope. /Retha
     def getAllLogs (self, count, offset):
@@ -139,10 +143,12 @@ class Database:
     #def logRequest (self, sender_id=None, type, name=None, description="", comment=""):
         #self.cur.execute ("INSERT INTO request_log (request_id, sender_id, type, name, description, comment, response) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (sender_id, type, name, description, comment, "",))
 
-    #Sets a feature flag to the specified value. /Retha
+    #Sets a feature flag to the specified value
     def setFlag (self, flag, value):
-        self.featureFlags[flag] = value
+        self.cur.execute ("UPDATE feature_flags SET value=? WHERE flag=?", (value, flag,))
 
-    #Gets the value of a feature flag. /Retha
+    #Gets the value of a feature flag
     def getFlag (self, flag):
-        return self.featureFlags[flag]
+        self.cur.execute ("SELECT value FROM feature_flags WHERE flag=?", (flag,))
+        for value in self.cur:
+            return bool(value[0])

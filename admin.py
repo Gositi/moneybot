@@ -281,12 +281,18 @@ async def comment (interaction: discord.Interaction, comment: str):
     value = "What the flag should be set to, omit to get flag value."
 )
 async def flagman (interaction: discord.Interaction, flag: str, value: bool=None):
+    db.commit ()
+
     if value is None:
+        #Get flag
         value = db.getFlag(flag)
         await interaction.response.send_message (f"Flag `{flag}` is `{value}`.")
     else:
+        #Set flag
         db.setFlag(flag, value)
         await interaction.response.send_message (f"Flag `{flag}` set to `{value}`.")
+
+    db.commit ()
 
 #@tree.command (name = "getRequests", description = "ADMIN: Gets requests & prints them in a list. The requests can optionally be filtered.", guild = guild)
 #@app_commands.describe (

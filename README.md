@@ -58,7 +58,7 @@ The database schema is as follows.
 +-------+------------+------+-----+---------+-------+
 | Field | Type       | Null | Key | Default | Extra |
 +-------+------------+------+-----+---------+-------+
-| flag  | tinytext   | NO   |     | NULL    |       |
+| flag  | tinytext   | NO   | UNI | NULL    |       |
 | value | tinyint(1) | YES  |     | NULL    |       |
 +-------+------------+------+-----+---------+-------+
 ```
