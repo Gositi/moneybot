@@ -270,7 +270,39 @@ async def comment (interaction: discord.Interaction, comment: str):
     await interaction.response.send_message (f"Comment added to logs:\n{comment}")
 
     db.commit ()
-    
+
+#Add a comment to the logs
+@tree.command (name = "flagman", description = "ADMIN: Manages flags, setting the flags to a new value if given, otherwise simply returns the current value of the flag.", guild = guild)
+@app_commands.describe (
+    flag = "What flag should be interacted with.",
+    value = "(Optional) What the flag should be set to.",
+    loud = "(Optional, default is false) Determines if getting the flag produces a public message.\nDoes not apply to setting flags, as those will always be public.
+)
+async def flagman (interaction: discord.Interaction, flag: str, value: str=None, loud: bool=False):
+    if value:
+        if value == "clear":
+            db.setFlag(flag) = None
+            await interaction.response.send_message (f"Flag {flag} cleared.")
+        else:
+            db.setFlag(flag) = value
+            await interaction.response.send_message (f"Flag {flag} set to {value}.")
+        return
+    v = db.getFlags(key) #NOTE: I would like to reuse the value variable here, but I'll play it safe. /Retha
+    if v:
+        await interaction.response.send_message (f"Flag {flag} is {v}.", ephemeral=not loud)
+    else:
+        await interaction.response.send_message (f"Flag {flag} isn't set.", ephemeral=not loud)
+
+@tree.command (name = "getRequests", description = "ADMIN: Gets requests & prints them in a list. The requests can optionally be filtered.", guild = guild)
+@app_commands.describe (
+    response = "Filters requests based on if they have recieved a response.",
+    request_id = "(Overrides other filters) Selects the request with the corresponding request ID.",
+    user_id = "Filters requests based on the user who sent them.",
+    category = "Filters requests based on what category they are in."
+)
+async def getRequests (interaction: discord.Interaction, response: str=None, request_id=None, user_id=None, category: str=None):
+    await interaction.response.send_message ("Not built out yet! D:")
+
 @client.event
 async def on_ready():
     await tree.sync (guild = guild)
