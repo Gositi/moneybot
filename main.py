@@ -51,10 +51,10 @@ async def bal (interaction: discord.Interaction, org: str = ""):
             await interaction.response.send_message (f"You are not the owner of `{org}`!", ephemeral=True)
         else:
             balance = db.getOrgBalance (org)
-            await interaction.response.send_message (f"The account `{org}` has {balance:.2f}{currency}.", ephemeral=True)
+            await interaction.response.send_message (f"The account `{org}` has {currency}{balance:.2f}.", ephemeral=True)
     else:
         balance = db.getBalance (interaction.user.id)
-        await interaction.response.send_message (f"You have {balance:.2f}{currency} in your personal account.", ephemeral=True)
+        await interaction.response.send_message (f"You have {currency}{balance:.2f} in your personal account.", ephemeral=True)
 
     db.commit ()
 
@@ -133,9 +133,9 @@ async def pay (interaction, org, recipient_user, recipient_org, amount, comment)
                     if comment: comment = f" with comment:\n{comment}"
                     else: comment = "."
 
-                    await interaction.response.send_message (f"Sent {amount:.2f}{currency} from {sender} to {recipient}{comment}")
+                    await interaction.response.send_message (f"Sent {currency}{amount:.2f} from {sender} to {recipient}{comment}")
                 else:
-                    await interaction.response.send_message (f"Insufficient balance, the selected account currently has {funds:.2f}{currency} left.", ephemeral=True)
+                    await interaction.response.send_message (f"Insufficient balance, the selected account currently has {currency}{funds:.2f} left.", ephemeral=True)
 
     db.commit ()
 
