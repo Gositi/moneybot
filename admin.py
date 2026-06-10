@@ -45,7 +45,7 @@ async def getbal (interaction: discord.Interaction, user: discord.User):
     #Make sure user exists in database
     db.ensureUserExists (user.id)
     #Respond with balance
-    await interaction.response.send_message (f"User {user.mention} has {db.getBalance (user.id):.2f}{currency}.")
+    await interaction.response.send_message (f"User {user.mention} has {currency}{db.getBalance (user.id):.2f}.")
 
     db.commit ()
 
@@ -58,7 +58,7 @@ async def allbal (interaction: discord.Interaction):
     balances = db.getBalances ()
     s = "List of balances:"
     for userID, balance in balances.items ():
-        s += f"\n<@{userID}>: {balance:.2f}{currency}"
+        s += f"\n<@{userID}>: {currency}{balance:.2f}"
     await interaction.response.send_message (s)
 
     db.commit ()
@@ -80,7 +80,7 @@ async def chgbal (interaction: discord.Interaction, user: discord.User, amount: 
     #Perform transaction
     db.changeBalance (user.id, amount)
     db.logTransaction (amount, recipient_id=user.id, comment=comment)
-    await interaction.response.send_message (f"Changed balance of {user.mention} by {amount:.2f}{currency} with comment:\n{comment}")
+    await interaction.response.send_message (f"Changed balance of {user.mention} by {currency}{amount:.2f} with comment:\n{comment}")
 
     db.commit ()
 
@@ -140,7 +140,7 @@ async def allorgs (interaction: discord.Interaction):
     orgs = db.getAllOrgs ()
     s = "List of all orgs:"
     for name, (user_id, balance, desc) in orgs.items ():
-        s += f"\n`{name}` (<@{user_id}>, {desc}): {balance:.2f}{currency}"
+        s += f"\n`{name}` (<@{user_id}>, {desc}): {currency}{balance:.2f}"
     await interaction.response.send_message (s)
 
     db.commit ()
@@ -157,7 +157,7 @@ async def getorgs (interaction: discord.Interaction, user: discord.User):
     orgs = db.getUserOrgs (user.id)
     s = f"List of orgs owned by {user.mention}:"
     for name, (balance, desc) in orgs.items ():
-        s += f"\n`{name}` ({desc}): {balance:.2f}{currency}"
+        s += f"\n`{name}` ({desc}): {currency}{balance:.2f}"
     await interaction.response.send_message (s)
 
     db.commit ()
@@ -173,7 +173,7 @@ async def orgbal (interaction: discord.Interaction, org: str):
 
     #Get and display balances
     (user_id, balance, desc) = db.getAllOrgs()[name]
-    await interaction.response.send_message (f"Org `{name}` ({desc}) owned by <@{user_id}> has {balance:.2f}{currency}.")
+    await interaction.response.send_message (f"Org `{name}` ({desc}) owned by <@{user_id}> has {currency}{balance:.2f}.")
 
     db.commit ()
 
@@ -197,7 +197,7 @@ async def chgorg (interaction: discord.Interaction, org: str, amount: float, com
         #Perform transaction
         db.changeOrgBalance (name, amount)
         db.logTransaction (amount, recipient_org=name, comment=comment)
-        await interaction.response.send_message (f"Changed balance of `{name}` by {amount:.2f}{currency} with comment:\n{comment}")
+        await interaction.response.send_message (f"Changed balance of `{name}` by {currency}{amount:.2f} with comment:\n{comment}")
 
     db.commit ()
 
@@ -232,7 +232,7 @@ async def networth (interaction: discord.Interaction, user: discord.User):
     #Get and display balances
     orgs = db.getUserOrgs (user.id)
     networth = sum([balance for _, (balance, _) in orgs.items()] + [db.getBalance (user.id)])
-    await interaction.response.send_message (f"User {user.mention} has a net worth of {networth:.2f}{currency}.")
+    await interaction.response.send_message (f"User {user.mention} has a net worth of {currency}{networth:.2f}.")
 
     db.commit ()
 
