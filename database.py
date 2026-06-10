@@ -11,13 +11,24 @@ import decimal
 
 class Database:
     def __init__ (self, user, host, passwd, database):
+        #Store login credentials
+        self.user = user
+        self.host = host
+        self.passwd = passwd
+        self.database = database
+
         #Connect to database
+        self._connect ()
+
+    #Connect to database
+    def _connect (self):
+        #Connect
         try:
             self.conn = mariadb.connect (
-                user = user,
-                host = host,
-                passwd = passwd,
-                database = database,
+                user = self.user,
+                host = self.host,
+                passwd = self.passwd,
+                database = self.database,
                 init_command = "SET SESSION wait_timeout = 86400"
             )
         except mariadb.Error as e:
@@ -32,7 +43,10 @@ class Database:
 
     #Commit commands issued
     def commit (self):
-        self.conn.commit ()
+        try:
+            self.conn.commit ()
+        except mariadb.InterfaceError:
+            self._connect ()
 
     #Get balance of user
     def getBalance (self, user):
